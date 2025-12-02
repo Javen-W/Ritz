@@ -1,12 +1,15 @@
-[gd_scene load_steps=3 format=3 uid="uid://cidflaxqyhnen"]
+[gd_scene load_steps=2 format=3 uid="uid://cidflaxqyhnen"]
 
 [ext_resource type="Script" uid="uid://ba7jsd4138l65" path="res://game.gd" id="1_80nbo"]
-[ext_resource type="PackedScene" uid="uid://cv28vb3liha3s" path="res://domino.tscn" id="2_e2o6t"]
 
 [node name="Game" type="Node2D"]
 script = ExtResource("1_80nbo")
 
 [node name="Camera2D" type="Camera2D" parent="."]
-zoom = Vector2(0.505, 0.505)
+zoom = Vector2(0.5, 0.5)
 
-[node name="Domino" parent="." instance=ExtResource("2_e2o6t")]
+[node name="Tiles" type="Node2D" parent="."]
+
+[node name="Dominos" type="Node2D" parent="."]
+
+[node name="Constraints" type="Node2D" parent="."]

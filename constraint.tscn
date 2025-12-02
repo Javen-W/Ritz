@@ -5,15 +5,10 @@
 [node name="Constraint" type="Node2D"]
 script = ExtResource("1")
 
-[node name="Overlay" type="ColorRect" parent="."]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(1, 0.7373294, 0.7373294, 0.25)
-
 [node name="Indicator" type="Polygon2D" parent="."]
+top_level = true
 position = Vector2(40, 40)
+rotation = 0.7853982
+scale = Vector2(0.85, 0.85)
 offset = Vector2(-20, -20)
-polygon = PackedVector2Array(0, 0, 40, 0, 0, 40)
+polygon = PackedVector2Array(0, 0, 40, 0, 40, 40, 0, 40)

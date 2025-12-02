@@ -12,12 +12,15 @@ var rng := RandomNumberGenerator.new()
 @export var domino_scene: PackedScene = preload("res://domino.tscn")
 @export var constraint_scene: PackedScene = preload("res://constraint.tscn")
 
-# Camera
+# Child nodes
 @onready var camera2d : Camera2D = $Camera2D
+@onready var tile_nodes : Node2D = $Tiles
+@onready var domino_nodes : Node2D = $Dominos
+@onready var constraint_nodes : Node2D = $Constraints
 
 # Grid storage
 var grid : Dictionary = {} # Vector2i -> Tile
-var dominoes : Array[Domino] = []
+var dominos : Array[Domino] = []
 var constraints : Array[Constraint] = []
 
 func _ready() -> void:
@@ -25,7 +28,7 @@ func _ready() -> void:
 	camera2d.position = Vector2(MAP_SIZE / 2, MAP_SIZE / 2) * 64
 	
 	generate_domino_path()
-	# generate_constraints()
+	generate_constraints()
 
 # --------------------------------------------------------------
 # Generate snake-like path of dominoes (2 tiles each)
@@ -61,8 +64,8 @@ func generate_domino_path() -> void:
 		tile1.position = pos1 * 64
 		tile2.position = pos2 * 64
 		
-		add_child(tile1)
-		add_child(tile2)
+		tile_nodes.add_child(tile1)
+		tile_nodes.add_child(tile2)
 		
 		grid[pos1] = tile1
 		grid[pos2] = tile2
@@ -73,8 +76,9 @@ func generate_domino_path() -> void:
 		
 		# Initialize domino
 		var domino := domino_scene.instantiate() as Domino
-		add_child(domino)
-		domino.init(pos1, pos2, left, right, horizontal)
+		domino_nodes.add_child(domino)
+		dominos.append(domino)
+		domino.init(tile1.position, tile2.position, left, right, horizontal)
 		var center = (tile1.position + tile2.position) * 0.5
 		domino.position = center + Vector2(500.0, 0.0)
 		
@@ -108,22 +112,24 @@ func _in_bounds(v: Vector2i) -> bool:
 # Generate non-overlapping constraints
 # --------------------------------------------------------------
 func generate_constraints() -> void:
-	# Extract all tiles into a generic Array first
-	var remaining_tiles : Array = grid.values().duplicate()
-	remaining_tiles.shuffle()
+	# Extract all dominos into a tile-state array first
+	var remaining_tilestates : Array[Dictionary] = []
+	for domino in dominos:
+		remaining_tilestates.append({"position": domino.tile_pos1, "value": domino.label_left})
+		remaining_tilestates.append({"position": domino.tile_pos2, "value": domino.label_right})
 	
-	const MIN_SIZE := 2
-	const MAX_SIZE := 7
+	const MIN_SIZE := 1
+	const MAX_SIZE := 6
 	
-	while remaining_tiles.size() >= MIN_SIZE:
-		var size := rng.randi_range(MIN_SIZE, min(MAX_SIZE, remaining_tiles.size()))
-		var group : Array[Tile] = []
+	# Populate constraints
+	while remaining_tilestates.size() >= MIN_SIZE:
+		print(len(remaining_tilestates))
+		var size := rng.randi_range(MIN_SIZE, min(MAX_SIZE, remaining_tilestates.size()))
+		var group : Array[Dictionary] = []
 		
 		# Take `size` tiles
-		for i in size:
-			if remaining_tiles.is_empty():
-				break
-			group.append(remaining_tiles.pop_back() as Tile)
+		while len(group) < size and !remaining_tilestates.is_empty():
+			group.append(remaining_tilestates.pop_back())
 		
 		if group.size() < MIN_SIZE:
 			break
@@ -138,8 +144,8 @@ func generate_constraints() -> void:
 		
 		# Create constraint
 		var c := constraint_scene.instantiate() as Constraint
-		c.tiles = group
-		c.color = Color.from_hsv(rng.randf(), 0.85, 1.0, 0.35)
+		c.color = Color.from_hsv(rng.randf(), 0.95, 1.0, 0.35)
+		c.group = group
 		
 		if group.size() == 1:
 			c.type = Constraint.Type.LESS_THAN if rng.randf() < 0.5 else Constraint.Type.GREATER_THAN
@@ -149,11 +155,7 @@ func generate_constraints() -> void:
 			c.target_value = rng.randi_range(0, 6)
 		else:
 			c.type = Constraint.Type.SUM
-			# Optional: pre-calculate real sum for real hints later
 			c.target_value = 0
 		
-		add_child(c)
+		constraint_nodes.add_child(c)
 		constraints.append(c)
-		
-		# Rebuild overlay (calls _ready again indirectly)
-		c._ready()
