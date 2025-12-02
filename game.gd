@@ -16,8 +16,8 @@ var rng := RandomNumberGenerator.new()
 @onready var camera2d : Camera2D = $Camera2D
 
 # Grid storage
-var grid : Dictionary = {}                    # Vector2i -> Tile
-var dominoes : Array[Dictionary] = []         # Just data
+var grid : Dictionary = {} # Vector2i -> Tile
+var dominoes : Array[Domino] = []
 var constraints : Array[Constraint] = []
 
 func _ready() -> void:
@@ -25,11 +25,10 @@ func _ready() -> void:
 	camera2d.position = Vector2(MAP_SIZE / 2, MAP_SIZE / 2) * 64
 	
 	generate_domino_path()
-	place_domino_instances()
 	# generate_constraints()
 
 # --------------------------------------------------------------
-# 1. Generate snake-like path of dominoes (2 tiles each)
+# Generate snake-like path of dominoes (2 tiles each)
 # --------------------------------------------------------------
 func generate_domino_path() -> void:
 	var directions = [
@@ -68,17 +67,18 @@ func generate_domino_path() -> void:
 		grid[pos1] = tile1
 		grid[pos2] = tile2
 		
-		# Store domino info
+		# Generate domino values
 		var left := rng.randi_range(0, 6)
 		var right := rng.randi_range(0, 6)
-		dominoes.append({
-			"pos1": pos1,
-			"pos2": pos2,
-			"left": left,
-			"right": right,
-			"horizontal": horizontal
-		})
 		
+		# Initialize domino
+		var domino := domino_scene.instantiate() as Domino
+		add_child(domino)
+		domino.init(pos1, pos2, left, right, horizontal)
+		var center = (tile1.position + tile2.position) * 0.5
+		domino.position = center + Vector2(500.0, 0.0)
+		
+		# Increment placed dominos
 		placed += 1
 		
 		# Choose next direction intelligently
@@ -105,18 +105,7 @@ func _in_bounds(v: Vector2i) -> bool:
 	return v.x >= 0 and v.y >= 0 and v.x < MAP_SIZE and v.y < MAP_SIZE
 
 # --------------------------------------------------------------
-# 2. Place actual Domino nodes
-# --------------------------------------------------------------
-func place_domino_instances() -> void:
-	for data in dominoes:
-		var dom := domino_scene.instantiate() as Domino
-		var center = (grid[data.pos1].position + grid[data.pos2].position) * 0.5
-		dom.position = center + Vector2(500.0, 0.0)
-		add_child(dom)
-		dom.init(data.left, data.right, data.horizontal)
-
-# --------------------------------------------------------------
-# 3. Generate non-overlapping constraints
+# Generate non-overlapping constraints
 # --------------------------------------------------------------
 func generate_constraints() -> void:
 	# Extract all tiles into a generic Array first
