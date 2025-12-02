@@ -1,0 +1,20 @@
+[gd_scene load_steps=5 format=3 uid="uid://dia1elu6u0o16"]
+
+[ext_resource type="Shader" uid="uid://vwqcq8d2qxhs" path="res://tile.gdshader" id="1_n3f48"]
+[ext_resource type="Script" uid="uid://nt88v6e2ne3p" path="res://tile.gd" id="1_vx4y2"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_round"]
+shader = ExtResource("1_n3f48")
+shader_parameter/border_width = 0.0400000019
+shader_parameter/border_color = Color(0.26657522, 0.2665752, 0.2665752, 1)
+shader_parameter/fill_color = Color(0.4700756, 0.4700758, 0.47007674, 1)
+
+[sub_resource type="QuadMesh" id="QuadMesh"]
+
+[node name="Tile" type="Node2D"]
+scale = Vector2(64, 64)
+script = ExtResource("1_vx4y2")
+
+[node name="MeshInstance2D" type="MeshInstance2D" parent="."]
+material = SubResource("ShaderMaterial_round")
+mesh = SubResource("QuadMesh")
