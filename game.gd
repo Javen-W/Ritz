@@ -57,28 +57,23 @@ func generate_domino_path() -> void:
 			pos += directions[rng.randi() % directions.size()]
 			continue
 			
-		# Place tiles
+		# Generate tiles
 		var tile1 := tile_scene.instantiate() as Tile
 		var tile2 := tile_scene.instantiate() as Tile
-		
 		tile1.position = pos1 * 64
 		tile2.position = pos2 * 64
-		
 		tile_nodes.add_child(tile1)
 		tile_nodes.add_child(tile2)
-		
 		grid[pos1] = tile1
 		grid[pos2] = tile2
 		
-		# Generate domino values
+		# Generate domino
+		var domino := domino_scene.instantiate() as Domino
 		var left := rng.randi_range(0, 6)
 		var right := rng.randi_range(0, 6)
-		
-		# Initialize domino
-		var domino := domino_scene.instantiate() as Domino
+		domino.init(tile1.position, tile2.position, left, right, horizontal)
 		domino_nodes.add_child(domino)
 		dominos.append(domino)
-		domino.init(tile1.position, tile2.position, left, right, horizontal)
 		var center = (tile1.position + tile2.position) * 0.5
 		domino.position = center + Vector2(500.0, 0.0)
 		

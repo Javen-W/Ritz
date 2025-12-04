@@ -4,6 +4,7 @@
 [ext_resource type="Shader" uid="uid://c8wx0vmhrjcwg" path="res://domino.gdshader" id="2_b7val"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_qyrqp"]
+resource_local_to_scene = true
 shader = ExtResource("2_b7val")
 shader_parameter/left_value = 1
 shader_parameter/right_value = 5

@@ -20,9 +20,7 @@ func init(pos1: Vector2i, pos2: Vector2i, left: int, right: int, horizontal: boo
 	value_left = left
 	value_right = right
 	is_horizontal = horizontal
-	
-	update_pips()
-	update_horizontal()
+	print("Domino init(): value_left={0}, value_right={1}".format([value_left, value_right]))
 
 func update_pips() -> void:
 	if shader_material:
@@ -36,4 +34,3 @@ func update_horizontal() -> void:
 	else:
 		rotation = deg_to_rad(-90.0)
 		# background.scale = Vector2(1.0, 2.0)
-	update_pips()  # refresh in case UVs changed
