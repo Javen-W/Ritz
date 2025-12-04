@@ -144,17 +144,9 @@ func generate_constraints() -> void:
 		
 		# Create constraint
 		var c := constraint_scene.instantiate() as Constraint
-		c.rng = rng
-		c.color = Color.from_hsv(rng.randf(), 0.95, 1.0, 0.35)
 		c.group = group
+		c.generate(rng)
 		
-		# Determine constraint type
-		if group.size() == 1:
-			c.type = Constraint.Type.LESS_THAN if rng.randf() < 0.5 else Constraint.Type.GREATER_THAN
-		elif rng.randf() < 0.3:
-			c.type = Constraint.Type.EQUAL
-		else:
-			c.type = Constraint.Type.SUM
-		
+		# Add constraint node
 		constraint_nodes.add_child(c)
 		constraints.append(c)
