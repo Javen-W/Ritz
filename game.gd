@@ -115,8 +115,8 @@ func generate_constraints() -> void:
 	# Extract all dominos into a tile-state array first
 	var remaining_tilestates : Array[Dictionary] = []
 	for domino in dominos:
-		remaining_tilestates.append({"position": domino.tile_pos1, "value": domino.label_left})
-		remaining_tilestates.append({"position": domino.tile_pos2, "value": domino.label_right})
+		remaining_tilestates.append({"position": domino.tile_pos1, "value": domino.label_left.text.to_int()})
+		remaining_tilestates.append({"position": domino.tile_pos2, "value": domino.label_right.text.to_int()})
 	
 	const MIN_SIZE := 1
 	const MAX_SIZE := 6
@@ -144,18 +144,17 @@ func generate_constraints() -> void:
 		
 		# Create constraint
 		var c := constraint_scene.instantiate() as Constraint
+		c.rng = rng
 		c.color = Color.from_hsv(rng.randf(), 0.95, 1.0, 0.35)
 		c.group = group
 		
+		# Determine constraint type
 		if group.size() == 1:
 			c.type = Constraint.Type.LESS_THAN if rng.randf() < 0.5 else Constraint.Type.GREATER_THAN
-			c.target_value = rng.randi_range(0, 6)
 		elif rng.randf() < 0.3:
 			c.type = Constraint.Type.EQUAL
-			c.target_value = rng.randi_range(0, 6)
 		else:
 			c.type = Constraint.Type.SUM
-			c.target_value = 0
 		
 		constraint_nodes.add_child(c)
 		constraints.append(c)
