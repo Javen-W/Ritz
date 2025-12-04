@@ -5,10 +5,9 @@
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_qyrqp"]
 shader = ExtResource("2_b7val")
-shader_parameter/left_value = 6
+shader_parameter/left_value = 1
 shader_parameter/right_value = 5
-shader_parameter/border_width = 0.05
-shader_parameter/border_color = Color(0, 0, 0, 0)
+shader_parameter/corner_radius = 0.12
 
 [sub_resource type="QuadMesh" id="QuadMesh_o246h"]
 

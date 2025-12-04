@@ -25,7 +25,7 @@ var constraints : Array[Constraint] = []
 
 func _ready() -> void:
 	rng.seed = hash(SEED)
-	camera2d.position = Vector2(MAP_SIZE / 2, MAP_SIZE / 2) * 64
+	camera2d.position = Vector2(MAP_SIZE / 2.0, MAP_SIZE / 2.0) * 64.0
 	
 	generate_domino_path()
 	generate_constraints()

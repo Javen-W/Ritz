@@ -34,6 +34,6 @@ func update_horizontal() -> void:
 		rotation = 0
 		# background.scale = Vector2(2.0, 1.0)
 	else:
-		rotation = deg_to_rad(90)
+		rotation = deg_to_rad(-90.0)
 		# background.scale = Vector2(1.0, 2.0)
 	update_pips()  # refresh in case UVs changed
