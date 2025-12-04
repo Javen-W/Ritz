@@ -28,7 +28,9 @@ func _ready() -> void:
 	# Indicator
 	var max_pos := Vector2(-INF, -INF)
 	for t in group:
-		max_pos = max_pos.max(t.position)
+		if t.position.y >= max_pos.y:
+			if t.position.x >= max_pos.x:
+				max_pos = t.position
 	indicator.position = max_pos + Vector2(32, 32)
 	indicator.color = color * Color(0.75, 0.75, 0.75, 255)
 	
