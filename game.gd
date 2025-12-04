@@ -115,8 +115,8 @@ func generate_constraints() -> void:
 	# Extract all dominos into a tile-state array first
 	var remaining_tilestates : Array[Dictionary] = []
 	for domino in dominos:
-		remaining_tilestates.append({"position": domino.tile_pos1, "value": domino.label_left.text.to_int()})
-		remaining_tilestates.append({"position": domino.tile_pos2, "value": domino.label_right.text.to_int()})
+		remaining_tilestates.append({"position": domino.tile_pos1, "value": domino.value_left})
+		remaining_tilestates.append({"position": domino.tile_pos2, "value": domino.value_right})
 	
 	const MIN_SIZE := 1
 	const MAX_SIZE := 6
