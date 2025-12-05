@@ -58,14 +58,8 @@ func generate_domino_path() -> void:
 			continue
 			
 		# Generate tiles
-		var tile1 := tile_scene.instantiate() as Tile
-		var tile2 := tile_scene.instantiate() as Tile
-		tile1.position = pos1 * 64
-		tile2.position = pos2 * 64
-		tile_nodes.add_child(tile1)
-		tile_nodes.add_child(tile2)
-		grid[pos1] = tile1
-		grid[pos2] = tile2
+		var tile1 := generate_tile(pos1)
+		var tile2 := generate_tile(pos2)
 		
 		# Generate domino
 		var domino := domino_scene.instantiate() as Domino
@@ -102,6 +96,16 @@ func generate_domino_path() -> void:
 
 func _in_bounds(v: Vector2i) -> bool:
 	return v.x >= 0 and v.y >= 0 and v.x < MAP_SIZE and v.y < MAP_SIZE
+
+# --------------------------------------------------------------
+# Generate tile
+# --------------------------------------------------------------
+func generate_tile(pos: Vector2i) -> Tile:
+	var tile := tile_scene.instantiate() as Tile
+	tile.position = pos * 64.0
+	tile_nodes.add_child(tile)
+	grid[pos] = tile
+	return tile
 
 # --------------------------------------------------------------
 # Generate non-overlapping constraints
