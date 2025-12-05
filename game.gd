@@ -23,72 +23,68 @@ var grid : Dictionary = {} # Vector2i -> Tile
 var dominos : Array[Domino] = []
 var constraints : Array[Constraint] = []
 
+# Constants
+const directions = [
+	Vector2i(1, 0), Vector2i(-1, 0),
+	Vector2i(0, 1), Vector2i(0, -1)
+]
+
 func _ready() -> void:
 	rng.seed = hash(SEED)
 	camera2d.position = Vector2(MAP_SIZE / 2.0, MAP_SIZE / 2.0) * 64.0
 	
-	generate_domino_path()
+	generate_tiles()
 	generate_constraints()
 
 # --------------------------------------------------------------
 # Generate snake-like path of dominoes (2 tiles each)
 # --------------------------------------------------------------
-func generate_domino_path() -> void:
-	var directions = [
-		Vector2i(1, 0), Vector2i(-1, 0),
-		Vector2i(0, 1), Vector2i(0, -1)
-	]
-	
+func generate_tiles() -> void:
 	var pos := Vector2i(MAP_SIZE / 2, MAP_SIZE / 2)
-	var placed := 0
 	
-	while placed < NUMBER_DOMINOS and grid.size() < NUMBER_DOMINOS * 2:
-		var horizontal := rng.randi_range(0, 1) == 0
-		var dir := Vector2i(1, 0) if horizontal else Vector2i(0, 1)
-		
+	while grid.size() < NUMBER_DOMINOS * 2:
+		# Set position-1
 		var pos1 = pos
-		var pos2 = pos + dir
+		if out_bounds(pos1):
+			# Restart position to center of map
+			pos = Vector2i(MAP_SIZE / 2, MAP_SIZE / 2)
+			continue
 		
-		# Bounds & collision check
-		if not _in_bounds(pos1) or not _in_bounds(pos2):
-			break
-		if grid.has(pos1) or grid.has(pos2):
+		# Generate position-2 candidates
+		var pos2_candidates : Array[Vector2i] = []
+		for d in directions:
+			var next = pos1 + d
+			if in_bounds(next) and !grid.has(next):
+				pos2_candidates.append(next)
+		
+		# Check conditions of position-1 and position-2 candidates
+		if grid.has(pos1) or pos2_candidates.is_empty():
 			# Try a random direction instead of failing
 			pos += directions[rng.randi() % directions.size()]
 			continue
-			
+		
+		# Set position-2
+		var pos2 := pos2_candidates[rng.randi() % pos2_candidates.size()]
+		
 		# Generate tiles
 		var tile1 := generate_tile(pos1)
 		var tile2 := generate_tile(pos2)
 		
 		# Generate domino
-		var domino := generate_domino(tile1, tile2, horizontal)
+		var is_horizontal = abs(pos2 - pos1) == Vector2i(1, 0)
+		var domino := generate_domino(tile1, tile2, is_horizontal)
 		
-		# Increment placed dominos
-		placed += 1
-		
-		# Choose next direction intelligently
-		var candidates : Array[Vector2i] = []
-		for d in directions:
-			var next = pos2 + d
-			var next2 = next + dir
-			if _in_bounds(next) and _in_bounds(next2) and !grid.has(next) and !grid.has(next2):
-				candidates.append(d)
-		
-		if candidates.is_empty():
-			# Fallback: any free adjacent cell
-			for d in directions:
-				var next = pos2 + d
-				if _in_bounds(next) and !grid.has(next):
-					candidates.append(d)
-		
-		if not candidates.is_empty():
-			pos = pos2 + candidates[rng.randi() % candidates.size()]
+		# Update next position
+		if rng.randf() < 0.5:
+			pos = pos2 + directions[rng.randi() % directions.size()]
 		else:
-			break
+			pos = pos1 + directions[rng.randi() % directions.size()]
 
-func _in_bounds(v: Vector2i) -> bool:
+func in_bounds(v: Vector2i) -> bool:
 	return v.x >= 0 and v.y >= 0 and v.x < MAP_SIZE and v.y < MAP_SIZE
+
+func out_bounds(v: Vector2i) -> bool:
+	return !in_bounds(v)
 
 # --------------------------------------------------------------
 # Generate tile
