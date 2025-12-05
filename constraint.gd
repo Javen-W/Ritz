@@ -4,7 +4,7 @@ class_name Constraint
 enum Type { SUM, EQUAL, LESS_THAN, GREATER_THAN }
 
 @export var type : Type = Type.SUM
-@export var group : Array[Dictionary] = []
+@export var group : Array[Tile] = []
 @export var color : Color = Color(1, 0.5, 0.5, 0.3)
 @export var target_value : int = -1
 
@@ -22,7 +22,7 @@ func _ready() -> void:
 		overlay.material = CanvasItemMaterial.new()
 		overlay.modulate = color
 		overlay.scale = Vector2(64, 64)
-		overlay.position = to_local(t["position"])
+		overlay.position = t.position
 		add_child(overlay)
 	
 	# Indicator
@@ -55,9 +55,10 @@ func generate(rng: RandomNumberGenerator) -> void:
 	var group_min = INF
 	var group_max = -INF
 	for t in group:
-		group_sum += t["value"]
-		group_min = min(group_min, t["value"])
-		group_max = max(group_max, t["value"])
+		print("Constraint Tile: position={0}, value={1}".format([t.position / 64.0, t.value]))
+		group_sum += t.value
+		group_min = min(group_min, t.value)
+		group_max = max(group_max, t.value)
 	
 	# Determine constraint type
 	if group.size() > 1 and group_min == group_max and rng.randf() < 0.85:

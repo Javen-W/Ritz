@@ -91,7 +91,8 @@ func out_bounds(v: Vector2i) -> bool:
 # --------------------------------------------------------------
 func generate_tile(pos: Vector2i) -> Tile:
 	var tile := tile_scene.instantiate() as Tile
-	tile.position = pos * 64.0
+	tile.position = pos * 64.0 
+	tile.value = rng.randi_range(0, 6)
 	tile_nodes.add_child(tile)
 	grid[pos] = tile
 	return tile
@@ -101,11 +102,7 @@ func generate_tile(pos: Vector2i) -> Tile:
 # --------------------------------------------------------------
 func generate_domino(tile1: Tile, tile2: Tile, is_horizontal: bool) -> Domino:
 	var domino := domino_scene.instantiate() as Domino
-	
-	var left_value := rng.randi_range(0, 6)
-	var right_value := rng.randi_range(0, 6)
-	
-	domino.init(tile1.position, tile2.position, left_value, right_value, is_horizontal)
+	domino.init(tile1.position, tile2.position, tile1.value, tile2.value, is_horizontal)
 	domino_nodes.add_child(domino)
 	dominos.append(domino)
 	
@@ -118,28 +115,35 @@ func generate_domino(tile1: Tile, tile2: Tile, is_horizontal: bool) -> Domino:
 # Generate non-overlapping constraints
 # --------------------------------------------------------------
 func generate_constraints() -> void:
-	# Extract all dominos into a tile-state array first
-	var remaining_tilestates : Array[Dictionary] = []
-	for domino in dominos:
-		remaining_tilestates.append({"position": domino.tile_pos1, "value": domino.value_left})
-		remaining_tilestates.append({"position": domino.tile_pos2, "value": domino.value_right})
+	var remaining_tiles : Array = grid.keys().duplicate()
 	
 	const MIN_SIZE := 1
 	const MAX_SIZE := 6
 	
 	# Populate constraints
-	while remaining_tilestates.size() >= MIN_SIZE:
-		print(len(remaining_tilestates))
-		var size := rng.randi_range(MIN_SIZE, min(MAX_SIZE, remaining_tilestates.size()))
-		var group : Array[Dictionary] = []
+	while remaining_tiles.size() >= MIN_SIZE:
+		print(len(remaining_tiles))
+		var size := rng.randi_range(MIN_SIZE, min(MAX_SIZE, remaining_tiles.size()))
+		var group : Array[Tile] = []
 		
-		# Take `size` tiles
-		while len(group) < size:
-			if remaining_tilestates.is_empty():
-				break
-			var next_tilestate = remaining_tilestates.pop_back()
-			print(next_tilestate["position"] / 64.0)
-			group.append(next_tilestate)
+		var _search = func(pos: Vector2i, func_ref: Callable) -> void:
+			# End cases.
+			if len(group) >= size or !remaining_tiles.has(pos):
+				return
+			
+			# Add tile to group.
+			var idx = remaining_tiles.find(pos)
+			var tile : Tile = grid[remaining_tiles.pop_at(idx)]
+			group.append(tile)
+			
+			# Recursive step.
+			for dir in directions:
+				var next_pos = pos + dir
+				func_ref.call(next_pos, func_ref)
+		
+		# Populate group
+		var init_pos : Vector2i = remaining_tiles[rng.randi() % remaining_tiles.size()]
+		_search.call(init_pos, _search)
 		
 		if group.size() < MIN_SIZE:
 			break
