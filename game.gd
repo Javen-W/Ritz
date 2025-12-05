@@ -99,12 +99,13 @@ func generate_tile(pos: Vector2i) -> Tile:
 # --------------------------------------------------------------
 # Generate domino
 # --------------------------------------------------------------
-func generate_domino(tile1: Tile, tile2: Tile, horizontal: bool) -> Domino:
+func generate_domino(tile1: Tile, tile2: Tile, is_horizontal: bool) -> Domino:
 	var domino := domino_scene.instantiate() as Domino
-	var left := rng.randi_range(0, 6)
-	var right := rng.randi_range(0, 6)
 	
-	domino.init(tile1.position, tile2.position, left, right, horizontal)
+	var left_value := rng.randi_range(0, 6)
+	var right_value := rng.randi_range(0, 6)
+	
+	domino.init(tile1.position, tile2.position, left_value, right_value, is_horizontal)
 	domino_nodes.add_child(domino)
 	dominos.append(domino)
 	
@@ -133,25 +134,24 @@ func generate_constraints() -> void:
 		var group : Array[Dictionary] = []
 		
 		# Take `size` tiles
-		while len(group) < size and !remaining_tilestates.is_empty():
-			group.append(remaining_tilestates.pop_back())
+		while len(group) < size:
+			if remaining_tilestates.is_empty():
+				break
+			var next_tilestate = remaining_tilestates.pop_back()
+			print(next_tilestate["position"] / 64.0)
+			group.append(next_tilestate)
 		
 		if group.size() < MIN_SIZE:
 			break
-			
+		
 		# Occasionally skip singles
 		if group.size() == 1:
-			if rng.randf() < 0.7:
-				continue
-			else:
-				group = []  # skip
+			if rng.randf() < 0.25:
 				continue
 		
 		# Create constraint
 		var c := constraint_scene.instantiate() as Constraint
 		c.group = group
 		c.generate(rng)
-		
-		# Add constraint node
 		constraint_nodes.add_child(c)
 		constraints.append(c)

@@ -14,13 +14,13 @@ func _ready() -> void:
 	update_pips()
 	update_horizontal()
 
-func init(pos1: Vector2i, pos2: Vector2i, left: int, right: int, horizontal: bool = true) -> void:
-	tile_pos1 = pos1
-	tile_pos2 = pos2
-	value_left = left
-	value_right = right
-	is_horizontal = horizontal
-	print("Domino init(): value_left={0}, value_right={1}".format([value_left, value_right]))
+func init(pos1: Vector2i, pos2: Vector2i, left_value: int, right_value: int, horizontal: bool = true) -> void:
+	self.tile_pos1 = pos1
+	self.tile_pos2 = pos2
+	self.value_left = left_value
+	self.value_right = right_value
+	self.is_horizontal = horizontal
+	print("Domino init(): value_left={0}, value_right={1}, pos1={2}, pos2={3}".format([value_left, value_right, tile_pos1, tile_pos2]))
 
 func update_pips() -> void:
 	if shader_material:
