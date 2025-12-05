@@ -62,14 +62,7 @@ func generate_domino_path() -> void:
 		var tile2 := generate_tile(pos2)
 		
 		# Generate domino
-		var domino := domino_scene.instantiate() as Domino
-		var left := rng.randi_range(0, 6)
-		var right := rng.randi_range(0, 6)
-		domino.init(tile1.position, tile2.position, left, right, horizontal)
-		domino_nodes.add_child(domino)
-		dominos.append(domino)
-		var center = (tile1.position + tile2.position) * 0.5
-		domino.position = center + Vector2(500.0, 0.0)
+		var domino := generate_domino(tile1, tile2, horizontal)
 		
 		# Increment placed dominos
 		placed += 1
@@ -106,6 +99,23 @@ func generate_tile(pos: Vector2i) -> Tile:
 	tile_nodes.add_child(tile)
 	grid[pos] = tile
 	return tile
+
+# --------------------------------------------------------------
+# Generate domino
+# --------------------------------------------------------------
+func generate_domino(tile1: Tile, tile2: Tile, horizontal: bool) -> Domino:
+	var domino := domino_scene.instantiate() as Domino
+	var left := rng.randi_range(0, 6)
+	var right := rng.randi_range(0, 6)
+	
+	domino.init(tile1.position, tile2.position, left, right, horizontal)
+	domino_nodes.add_child(domino)
+	dominos.append(domino)
+	
+	var center = (tile1.position + tile2.position) * 0.5
+	domino.position = center + Vector2(500.0, 0.0)
+	
+	return domino
 
 # --------------------------------------------------------------
 # Generate non-overlapping constraints
