@@ -137,7 +137,8 @@ func generate_constraints() -> void:
 			group.append(tile)
 			
 			# Recursive step.
-			for dir in directions:
+			var shuffled_dirs = shuffle_array(directions)
+			for dir in shuffled_dirs:
 				var next_pos = pos + dir
 				func_ref.call(next_pos, func_ref)
 		
@@ -159,3 +160,11 @@ func generate_constraints() -> void:
 		c.generate(rng)
 		constraint_nodes.add_child(c)
 		constraints.append(c)
+
+func shuffle_array(a: Array) -> Array:
+	var t = a.duplicate()
+	var b : Array = []
+	while !t.is_empty():
+		var element = t.pop_at(rng.randi() % t.size())
+		b.append(element)
+	return b
