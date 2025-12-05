@@ -123,7 +123,7 @@ func generate_constraints() -> void:
 	# Populate constraints
 	while remaining_tiles.size() >= MIN_SIZE:
 		print(len(remaining_tiles))
-		var size := rng.randi_range(MIN_SIZE, min(MAX_SIZE, remaining_tiles.size()))
+		var size := clampi(roundi(rng.randfn(2.5, 1.5)), MIN_SIZE, MAX_SIZE)
 		var group : Array[Tile] = []
 		
 		var _search = func(pos: Vector2i, func_ref: Callable) -> void:
