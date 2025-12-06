@@ -6,6 +6,8 @@ class_name Game
 @export var SEED := 777
 
 var rng := RandomNumberGenerator.new()
+@export var dot_noise := FastNoiseLite.new()
+var last_value := 0
 
 # Packed scenes — preload to avoid errors
 @export var tile_scene: PackedScene = preload("res://tile.tscn")
@@ -31,6 +33,7 @@ const directions = [
 
 func _ready() -> void:
 	rng.seed = hash(SEED)
+	dot_noise.seed = rng.seed
 	camera2d.position = Vector2(MAP_SIZE / 2.0, MAP_SIZE / 2.0) * 64.0
 	
 	generate_tiles()
@@ -91,11 +94,26 @@ func out_bounds(v: Vector2i) -> bool:
 # --------------------------------------------------------------
 func generate_tile(pos: Vector2i) -> Tile:
 	var tile := tile_scene.instantiate() as Tile
-	tile.position = pos * 64.0 
-	tile.value = rng.randi_range(0, 6)
+	tile.position = pos * 64.0
+	tile.value = dot_sample1(pos)
 	tile_nodes.add_child(tile)
 	grid[pos] = tile
 	return tile
+
+func dot_sample1(pos: Vector2i) -> int:
+	var noise_sample = 0.5 * (dot_noise.get_noise_2d(pos.x, pos.y) + 1.0) # [-1, 1] -> [0, 1]
+	var v := last_value
+	if noise_sample < 0.5:
+		v = rng.randi_range(0, 6)
+	last_value = v
+	print(noise_sample, "\t", v)
+	return v
+
+func dot_sample2(pos: Vector2i) -> int:
+	var noise_sample = 3.5 * (dot_noise.get_noise_2d(pos.x, pos.y) + 1.0) # [-1, 1] -> [0, 7]
+	var v = floori(clampf(noise_sample, 0, 6))
+	print(noise_sample, "\t", v)
+	return v
 
 # --------------------------------------------------------------
 # Generate domino
@@ -107,7 +125,7 @@ func generate_domino(tile1: Tile, tile2: Tile, is_horizontal: bool) -> Domino:
 	dominos.append(domino)
 	
 	var center = (tile1.position + tile2.position) * 0.5
-	domino.position = center + Vector2(500.0, 0.0)
+	domino.position = center + Vector2(750.0, 0.0)
 	
 	return domino
 
@@ -122,7 +140,7 @@ func generate_constraints() -> void:
 	
 	# Populate constraints
 	while remaining_tiles.size() >= MIN_SIZE:
-		print(len(remaining_tiles))
+		# print(len(remaining_tiles))
 		var size := clampi(roundi(rng.randfn(2.5, 1.5)), MIN_SIZE, MAX_SIZE)
 		var group : Array[Tile] = []
 		

@@ -55,7 +55,7 @@ func generate(rng: RandomNumberGenerator) -> void:
 	# Group metrics
 	var group_sum = 0
 	for t in group:
-		print("Constraint Tile: position={0}, value={1}".format([t.position / 64.0, t.value]))
+		# print("Constraint Tile: position={0}, value={1}".format([t.position / 64.0, t.value]))
 		group_sum += t.value
 	
 	# Determine constraint type
