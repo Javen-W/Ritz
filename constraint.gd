@@ -56,7 +56,7 @@ func generate(rng: RandomNumberGenerator) -> void:
 	var group_sum = 0
 	for t in group:
 		# print("Constraint Tile: position={0}, value={1}".format([t.position / 64.0, t.value]))
-		group_sum += t.value
+		group_sum += t.generated_value
 	
 	# Determine constraint type
 	if group.size() > 1 and is_equal() and rng.randf() > 0.15:
@@ -79,14 +79,14 @@ func generate(rng: RandomNumberGenerator) -> void:
 func is_equal() -> bool:
 	var vals = []
 	for t in group:
-		vals.append(t.value)
+		vals.append(t.generated_value)
 	return vals.min() == vals.max()
 
 func is_notequal() -> bool:
 	var t_group = group.duplicate()
-	var first_val = t_group.pop_front().value
+	var first_val = t_group.pop_front().generated_value
 	for t in t_group:
-		if t.value == first_val:
+		if t.generated_value == first_val:
 			return false
 	return true
 		

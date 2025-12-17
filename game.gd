@@ -95,7 +95,7 @@ func out_bounds(v: Vector2i) -> bool:
 func generate_tile(pos: Vector2i) -> Tile:
 	var tile := tile_scene.instantiate() as Tile
 	tile.position = pos * 64.0
-	tile.value = dot_sample1(pos)
+	tile.generated_value = dot_sample1(pos)
 	tile_nodes.add_child(tile)
 	grid[pos] = tile
 	return tile
@@ -120,7 +120,7 @@ func dot_sample2(pos: Vector2i) -> int:
 # --------------------------------------------------------------
 func generate_domino(tile1: Tile, tile2: Tile, is_horizontal: bool) -> Domino:
 	var domino := domino_scene.instantiate() as Domino
-	domino.init(tile1.position, tile2.position, tile1.value, tile2.value, is_horizontal)
+	domino.init(tile1.position, tile2.position, tile1.generated_value, tile2.generated_value, is_horizontal)
 	domino_nodes.add_child(domino)
 	dominos.append(domino)
 	
