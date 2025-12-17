@@ -34,7 +34,7 @@ const directions = [
 func _ready() -> void:
 	rng.seed = hash(SEED)
 	dot_noise.seed = rng.seed
-	camera2d.position = Vector2(MAP_SIZE / 2.0, MAP_SIZE / 2.0) * 64.0
+	camera2d.offset = Vector2(MAP_SIZE / 2.0, MAP_SIZE / 2.0) * 64.0
 	
 	generate_tiles()
 	generate_constraints()

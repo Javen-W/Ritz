@@ -34,3 +34,26 @@ func update_horizontal() -> void:
 	else:
 		rotation = deg_to_rad(-90.0)
 		# background.scale = Vector2(1.0, 2.0)
+
+var is_pressed : bool = false
+
+func _on_area_2d_mouse_entered() -> void:
+	print("Domino mouse_entered()")
+
+func _on_area_2d_mouse_exited() -> void:
+	is_pressed = false
+	print("Domino mouse_exited()")
+
+func _on_area_2d_input_event(viewport: Node, event: InputEvent, shape_idx: int) -> void:
+	# Mouse in viewport coordinates.
+	if event is InputEventMouseButton:
+		if event.is_pressed():
+			is_pressed = true
+			print("Mouse pressed.")
+		if event.is_released() and is_pressed:
+			is_pressed = false
+			print("Mouse released.")
+	
+	elif is_pressed and event is InputEventMouseMotion:
+		var camera = viewport.get_camera_2d()
+		self.position = camera.get_global_mouse_position() + event.relative * 1.15
