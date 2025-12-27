@@ -13,7 +13,7 @@ class_name Domino
 func _ready() -> void:
 	update_pips()
 	update_horizontal()
-
+	
 func init(pos1: Vector2i, pos2: Vector2i, left_value: int, right_value: int, horizontal: bool = true) -> void:
 	self.tile_pos1 = pos1
 	self.tile_pos2 = pos2
@@ -37,12 +37,19 @@ func update_horizontal() -> void:
 
 var is_pressed : bool = false
 
+func _unhandled_input(event: InputEvent) -> void:
+	if is_pressed and event is InputEventMouseMotion:
+		var camera = get_viewport().get_camera_2d()
+		self.position = camera.get_global_mouse_position() + event.relative
+
 func _on_area_2d_mouse_entered() -> void:
-	print("Domino mouse_entered()")
+	# print("Domino mouse_entered()")
+	pass
 
 func _on_area_2d_mouse_exited() -> void:
-	is_pressed = false
-	print("Domino mouse_exited()")
+	# is_pressed = false
+	# print("Domino mouse_exited()")
+	pass
 
 func _on_area_2d_input_event(viewport: Node, event: InputEvent, shape_idx: int) -> void:
 	# Mouse in viewport coordinates.
@@ -54,6 +61,3 @@ func _on_area_2d_input_event(viewport: Node, event: InputEvent, shape_idx: int) 
 			is_pressed = false
 			print("Mouse released.")
 	
-	elif is_pressed and event is InputEventMouseMotion:
-		var camera = viewport.get_camera_2d()
-		self.position = camera.get_global_mouse_position() + event.relative * 1.15
