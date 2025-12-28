@@ -1,8 +1,8 @@
 shader_type canvas_item;
 
 // Values 0–6 for each half
-uniform int left_value : hint_range(0, 6) = 0;
-uniform int right_value : hint_range(0, 6) = 0;
+uniform int dots1_value : hint_range(0, 6) = 0;
+uniform int dots2_value : hint_range(0, 6) = 0;
 
 // Rounded corner radius (0.0 = square, 0.15 = very round)
 uniform float corner_radius : hint_range(0.0, 0.25) = 0.12;
@@ -107,8 +107,8 @@ void fragment() {
 	COLOR.rgb = mix(COLOR.rgb, vec3(0.0), center_line);
     
     // Draw pips
-    float dots_left = draw_pips(uv, left_value, 0);
-    float dots_right = draw_pips(uv, right_value, 1);
-    float dots = max(dots_left, dots_right);
+    float dots1 = draw_pips(uv, dots1_value, 0);
+    float dots2 = draw_pips(uv, dots2_value, 1);
+    float dots = max(dots1, dots2);
     COLOR.rgb = mix(COLOR.rgb, vec3(0.0), dots);
 }

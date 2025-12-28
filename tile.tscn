@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=3 uid="uid://dia1elu6u0o16"]
+[gd_scene load_steps=6 format=3 uid="uid://dia1elu6u0o16"]
 
 [ext_resource type="Shader" uid="uid://vwqcq8d2qxhs" path="res://tile.gdshader" id="1_n3f48"]
 [ext_resource type="Script" uid="uid://nt88v6e2ne3p" path="res://tile.gd" id="1_vx4y2"]
@@ -11,6 +11,9 @@ shader_parameter/fill_color = Color(0.4700756, 0.4700758, 0.47007674, 1)
 
 [sub_resource type="QuadMesh" id="QuadMesh"]
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_vx4y2"]
+size = Vector2(0.8, 0.8)
+
 [node name="Tile" type="Node2D"]
 scale = Vector2(64, 64)
 script = ExtResource("1_vx4y2")
@@ -18,3 +21,11 @@ script = ExtResource("1_vx4y2")
 [node name="MeshInstance2D" type="MeshInstance2D" parent="."]
 material = SubResource("ShaderMaterial_round")
 mesh = SubResource("QuadMesh")
+
+[node name="Area2D" type="Area2D" parent="."]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+shape = SubResource("RectangleShape2D_vx4y2")

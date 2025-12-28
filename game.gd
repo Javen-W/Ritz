@@ -120,13 +120,10 @@ func dot_sample2(pos: Vector2i) -> int:
 # --------------------------------------------------------------
 func generate_domino(tile1: Tile, tile2: Tile, is_horizontal: bool) -> Domino:
 	var domino := domino_scene.instantiate() as Domino
-	domino.init(tile1.position, tile2.position, tile1.generated_value, tile2.generated_value, is_horizontal)
+	domino.init(tile1.generated_value, tile2.generated_value, is_horizontal)
 	domino_nodes.add_child(domino)
 	dominos.append(domino)
-	
-	var center = (tile1.position + tile2.position) * 0.5
-	domino.position = center + Vector2(750.0, 0.0)
-	
+	domino.update_position_to_tiles(tile1, tile2, Vector2(750.0, 0.0))
 	return domino
 
 # --------------------------------------------------------------
