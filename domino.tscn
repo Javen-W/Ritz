@@ -55,6 +55,7 @@ position = Vector2(0.21875, 0)
 shape = SubResource("RectangleShape2D_2jpam")
 debug_color = Color(0.28993577, 0.4982255, 1, 0.41960785)
 
+[connection signal="domino_picked" from="." to="." method="_on_domino_picked"]
 [connection signal="domino_released" from="." to="." method="_on_domino_released"]
 [connection signal="input_event" from="MouseArea2D" to="." method="_on_mouse_area_2d_input_event"]
 [connection signal="area_entered" from="Dots1Area2D" to="." method="_on_dots_1_area_2d_area_entered"]
