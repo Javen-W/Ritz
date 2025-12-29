@@ -15,8 +15,9 @@ signal domino_released
 
 func _ready() -> void:
 	update_pips()
-	update_horizontal()
-	
+	if self.is_horizontal:
+		rotate_once()
+
 func init(dots1_val: int, dots2_val: int, horizontal: bool = true) -> void:
 	self.dots1_value = dots1_val
 	self.dots2_value = dots2_val
@@ -34,13 +35,8 @@ func update_pips() -> void:
 		shader_material.set_shader_parameter("dots1_value", self.dots1_value)
 		shader_material.set_shader_parameter("dots2_value", self.dots2_value)
 
-func update_horizontal() -> void:
-	if is_horizontal:
-		rotation = 0
-		# background.scale = Vector2(2.0, 1.0)
-	else:
-		rotation = deg_to_rad(-90.0)
-		# background.scale = Vector2(1.0, 2.0)
+func rotate_once() -> void:
+	self.rotation -= deg_to_rad(-90.0)
 
 var is_pressed : bool = false
 var entered_tile1s : Array[Tile] = []
@@ -54,10 +50,12 @@ func _unhandled_input(event: InputEvent) -> void:
 func _on_mouse_area_2d_input_event(viewport: Node, event: InputEvent, shape_idx: int) -> void:
 	# Mouse in viewport coordinates.
 	if event is InputEventMouseButton:
-		if event.is_pressed():
+		if event.double_click:
+			rotate_once()
+		elif event.is_pressed():
 			is_pressed = true
 			print("Mouse pressed.")
-		if event.is_released() and is_pressed:
+		elif event.is_released() and is_pressed:
 			is_pressed = false
 			domino_released.emit()
 			print("Mouse released.")
