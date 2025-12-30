@@ -73,13 +73,13 @@ func _on_dots_1_area_2d_area_entered(area: Area2D) -> void:
 	var tile = area.owner as Tile
 	if !entered_tile1s.has(tile):
 		entered_tile1s.append(tile)
-		print("Domino dots1 area entered: ", tile)
+		# print("Domino dots1 area entered: ", tile)
 		
 func _on_dots_2_area_2d_area_entered(area: Area2D) -> void:
 	var tile = area.owner as Tile
 	if !entered_tile2s.has(tile):
 		entered_tile2s.append(tile)
-		print("Domino dots2 area entered: ", tile)
+		# print("Domino dots2 area entered: ", tile)
 
 func _on_dots_1_area_2d_area_exited(area: Area2D) -> void:
 	var tile = area.owner as Tile
@@ -96,14 +96,14 @@ func _erase_entered_tile2(tile: Tile) -> void:
 	if self.tile2 == tile:
 		self.tile2.remove_dots()
 		self.tile2 = null
-	print("Domino dots2 area exited: ", tile)
+	# print("Domino dots2 area exited: ", tile)
 
 func _erase_entered_tile1(tile: Tile) -> void:
 	entered_tile1s.erase(tile)
 	if self.tile1 == tile:
 		self.tile1.remove_dots()
 		self.tile1 = null
-	print("Domino dots1 area exited: ", tile)
+	# print("Domino dots1 area exited: ", tile)
 
 func _find_nearest_tile(tiles: Array[Tile], dots_pos: Vector2) -> Tile:
 	var min_dist = INF
@@ -141,6 +141,12 @@ func _on_domino_released() -> void:
 	if tile_dist != 64.0:
 		return
 	
+	# Validate tile domino emptiness.
+	if candidate_tile1.dots_value != -1:
+		return
+	if candidate_tile2.dots_value != -1:
+		return 
+	
 	# Attempt domino position update.
 	var pos_updated = update_position_to_tiles(candidate_tile1, candidate_tile2, Vector2i.ZERO)
 	if !pos_updated:
@@ -154,4 +160,4 @@ func _on_domino_released() -> void:
 	self.tile2.place_dots(self.dots2_value)
 	
 	# Debug.
-	print(self.tile1.global_position.snappedf(64.0) / 64.0, " ", self.tile2.global_position.snappedf(64.0) / 64.0)
+	print("Domino placement successful: ", self.tile1.global_position.snappedf(64.0) / 64.0, " ", self.tile2.global_position.snappedf(64.0) / 64.0)
