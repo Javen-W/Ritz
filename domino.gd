@@ -13,13 +13,21 @@ signal domino_picked
 
 @onready var background : MeshInstance2D = $Background
 @onready var shader_material : ShaderMaterial = background.material as ShaderMaterial
+@onready var mouse_collision : CollisionShape2D = $MouseArea2D/CollisionShape2D
 @onready var dots1_collision : CollisionShape2D = $Dots1Area2D/CollisionShape2D
 @onready var dots2_collision : CollisionShape2D = $Dots2Area2D/CollisionShape2D
+
+static var selected_domino : Domino = null
+
+var is_picked : bool = false
+var entered_tile1s : Array[Tile] = []
+var entered_tile2s : Array[Tile] = []
 
 func _ready() -> void:
 	update_pips()
 	if self.is_horizontal:
 		rotate_once()
+	add_to_group("dominos")
 
 func init(dots1_val: int, dots2_val: int, horizontal: bool = true) -> void:
 	self.dots1_value = dots1_val
@@ -42,12 +50,8 @@ func update_pips() -> void:
 func rotate_once() -> void:
 	rotate(deg_to_rad(-90.0))
 
-var is_pressed : bool = false
-var entered_tile1s : Array[Tile] = []
-var entered_tile2s : Array[Tile] = []
-
 func _unhandled_input(event: InputEvent) -> void:
-	if is_pressed and event is InputEventMouseMotion:
+	if is_picked and event is InputEventMouseMotion:
 		var camera = get_viewport().get_camera_2d()
 		self.position = camera.get_global_mouse_position() + event.relative
 
@@ -57,24 +61,18 @@ func _on_mouse_area_2d_input_event(viewport: Node, event: InputEvent, shape_idx:
 		if event.double_click:
 			rotate_once()
 		elif event.is_pressed():
-			is_pressed = true
 			domino_picked.emit()
 			# print("Mouse pressed.")
-		elif event.is_released() and is_pressed:
-			is_pressed = false
-			call_deferred("_emit_domino_released")
-			# domino_released.emit()
+		elif event.is_released() and is_picked:
+			domino_released.emit()
 			# print("Mouse released.")
-
-func _emit_domino_released() -> void:
-	domino_released.emit()
 
 func _on_dots_1_area_2d_area_entered(area: Area2D) -> void:
 	var tile = area.owner as Tile
 	if !entered_tile1s.has(tile):
 		entered_tile1s.append(tile)
 		# print("Domino dots1 area entered: ", tile)
-		
+
 func _on_dots_2_area_2d_area_entered(area: Area2D) -> void:
 	var tile = area.owner as Tile
 	if !entered_tile2s.has(tile):
@@ -116,6 +114,7 @@ func _find_nearest_tile(tiles: Array[Tile], dots_pos: Vector2) -> Tile:
 	return min_tile
 
 func _on_domino_picked() -> void:
+	is_picked = true
 	if self.tile1 != null:
 		self.tile1.remove_dots()
 		self.tile1 = null
@@ -124,6 +123,8 @@ func _on_domino_picked() -> void:
 		self.tile2 = null
 
 func _on_domino_released() -> void:
+	is_picked = false
+	
 	# Select & validate candidate tile1.
 	var candidate_tile1 = _find_nearest_tile(entered_tile1s, dots1_collision.global_position)
 	if candidate_tile1 == null:
@@ -161,3 +162,29 @@ func _on_domino_released() -> void:
 	
 	# Debug.
 	print("Domino placement successful: ", self.tile1.global_position.snappedf(64.0) / 64.0, " ", self.tile2.global_position.snappedf(64.0) / 64.0)
+
+func _on_domino_selected(domino: Domino) -> void:
+	if domino != self:
+		mouse_collision.set_deferred("disabled", true)
+	else:
+		self.selected_domino = domino
+		print("Domino selected: ", domino.name)
+
+func _on_domino_deselected() -> void:
+	if self.selected_domino != self:
+		mouse_collision.set_deferred("disabled", false)
+	else:
+		self.selected_domino = null
+		print("Domino deselected.")
+
+func _on_mouse_area_2d_mouse_entered() -> void:
+	if self.selected_domino != null:
+		return
+	get_tree().call_group("dominos", "_on_domino_selected", self)
+	# print("Mouse area2d entered.")
+
+func _on_mouse_area_2d_mouse_exited() -> void:
+	if self.selected_domino != self:
+		return
+	get_tree().call_group("dominos", "_on_domino_deselected")
+	# print("Mouse area2d exited.")

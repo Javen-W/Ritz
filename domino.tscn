@@ -21,7 +21,7 @@ size = Vector2(0.15, 0.9)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_2jpam"]
 size = Vector2(0.15, 0.9)
 
-[node name="Domino" type="Node2D"]
+[node name="Domino" type="Node2D" groups=["dominos"]]
 scale = Vector2(128, 64)
 script = ExtResource("1")
 dots1_value = 1
@@ -58,6 +58,8 @@ debug_color = Color(0.28993577, 0.4982255, 1, 0.41960785)
 [connection signal="domino_picked" from="." to="." method="_on_domino_picked"]
 [connection signal="domino_released" from="." to="." method="_on_domino_released"]
 [connection signal="input_event" from="MouseArea2D" to="." method="_on_mouse_area_2d_input_event"]
+[connection signal="mouse_entered" from="MouseArea2D" to="." method="_on_mouse_area_2d_mouse_entered"]
+[connection signal="mouse_exited" from="MouseArea2D" to="." method="_on_mouse_area_2d_mouse_exited"]
 [connection signal="area_entered" from="Dots1Area2D" to="." method="_on_dots_1_area_2d_area_entered"]
 [connection signal="area_exited" from="Dots1Area2D" to="." method="_on_dots_1_area_2d_area_exited"]
 [connection signal="area_entered" from="Dots2Area2D" to="." method="_on_dots_2_area_2d_area_entered"]
