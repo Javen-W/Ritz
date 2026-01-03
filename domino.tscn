@@ -22,6 +22,7 @@ size = Vector2(0.15, 0.9)
 size = Vector2(0.15, 0.9)
 
 [node name="Domino" type="Node2D" groups=["dominos"]]
+z_index = 2
 scale = Vector2(128, 64)
 script = ExtResource("1")
 dots1_value = 1
