@@ -32,12 +32,42 @@ const directions = [
 ]
 
 func _ready() -> void:
+	# Init game.
 	rng.seed = hash(SEED)
 	dot_noise.seed = rng.seed
 	camera2d.offset = Vector2(MAP_SIZE / 2.0, MAP_SIZE / 2.0) * 64.0
 	
+	# Connect signals.
+	GameSignalbus.domino_assigned.connect(_on_domino_assigned)
+	
+	# Generate game.
 	generate_tiles()
 	generate_constraints()
+
+# --------------------------------------------------------------
+# Handle signals
+# --------------------------------------------------------------
+func _on_domino_assigned(domino: Domino) -> void:
+	print("Game: Domino assigned.")
+	# Check if all conditions have been met for a game win.
+	var all_conditions_met = validate_win_conditions()
+	print("Game: All conditions met? ", all_conditions_met)
+	if all_conditions_met:
+		# Game won!
+		print("Game: Win!")
+		GameSignalbus.emit_game_won()
+
+func validate_win_conditions() -> bool:
+	# No empty tiles.
+	for tile : Tile in self.grid.values():
+		if tile.dots_value == -1:
+			return false
+	# Constraints.
+	for constraint in self.constraints:
+		if !constraint.is_constraint_satisfied():
+			return false
+	# Pass.
+	return true
 
 # --------------------------------------------------------------
 # Generate snake-like path of dominoes (2 tiles each)
