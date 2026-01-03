@@ -15,6 +15,10 @@ run/main_scene="uid://cidflaxqyhnen"
 config/features=PackedStringArray("4.5", "GL Compatibility")
 config/icon="res://icon.svg"
 
+[autoload]
+
+GameSignalbus="*res://game_signalbus.gd"
+
 [layer_names]
 
 2d_physics/layer_1="mouse"

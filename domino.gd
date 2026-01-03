@@ -160,6 +160,9 @@ func _on_domino_released() -> void:
 	self.tile2 = candidate_tile2
 	self.tile2.place_dots(self.dots2_value)
 	
+	# Signal global bus.
+	GameSignalbus.emit_domino_assigned(self)
+	
 	# Debug.
 	print("Domino placement successful: ", self.tile1.global_position.snappedf(64.0) / 64.0, " ", self.tile2.global_position.snappedf(64.0) / 64.0)
 
