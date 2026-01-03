@@ -1,0 +1,8 @@
+[gd_resource type="FastNoiseLite" format=3 uid="uid://cdnr10focog76"]
+
+[resource]
+noise_type = 3
+fractal_type = 3
+fractal_gain = 9.0
+cellular_distance_function = 2
+metadata/_preview_in_3d_space_ = true

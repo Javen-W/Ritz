@@ -1,17 +1,11 @@
 [gd_scene load_steps=3 format=3 uid="uid://cidflaxqyhnen"]
 
 [ext_resource type="Script" uid="uid://ba7jsd4138l65" path="res://game.gd" id="1_80nbo"]
-
-[sub_resource type="FastNoiseLite" id="FastNoiseLite_80nbo"]
-noise_type = 3
-fractal_type = 3
-fractal_gain = 9.0
-cellular_distance_function = 2
-metadata/_preview_in_3d_space_ = true
+[ext_resource type="FastNoiseLite" uid="uid://cdnr10focog76" path="res://dot_noise.tres" id="2_e2o6t"]
 
 [node name="Game" type="Node2D"]
 script = ExtResource("1_80nbo")
-dot_noise = SubResource("FastNoiseLite_80nbo")
+dot_noise = ExtResource("2_e2o6t")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 zoom = Vector2(0.5, 0.5)
