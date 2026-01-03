@@ -59,9 +59,9 @@ func generate(rng: RandomNumberGenerator) -> void:
 		group_sum += t.generated_value
 	
 	# Determine constraint type
-	if group.size() > 1 and is_equal() and rng.randf() > 0.15:
+	if group.size() > 1 and is_group_equal(true) and rng.randf() > 0.15:
 		type = Constraint.Type.EQUAL
-	elif group.size() > 1 and is_notequal() and rng.randf() < 0.15:
+	elif group.size() > 1 and is_group_notequal(true) and rng.randf() < 0.15:
 		type = Constraint.Type.NOT_EQUAL
 	elif group_sum <= 10 and rng.randf() < 0.10:
 		type = Constraint.Type.LESS_THAN
@@ -76,17 +76,50 @@ func generate(rng: RandomNumberGenerator) -> void:
 	# Determine color
 	color = Color.from_hsv(rng.randf(), 0.95, 1.0, 0.35)
 
-func is_equal() -> bool:
+func is_constraint_satisfied() -> bool:
+	# Calculate group sum value.
+	var group_sum = 0
+	for tile in self.group:
+		# Verify every tile is assigned a domino.
+		if tile.dots_value == -1:
+			return false
+		group_sum += tile.dots_value
+	
+	# Check group sum against constraint type requirements.
+	if type == Type.SUM:
+		return group_sum == self.target_value
+	elif type == Type.EQUAL:
+		return is_group_equal(false)
+	elif type == Type.NOT_EQUAL:
+		return is_group_notequal(false)
+	elif type == Type.LESS_THAN:
+		return group_sum < self.target_value
+	elif type == Type.GREATER_THAN:
+		return group_sum > self.target_value
+	else:
+		# Error
+		return false
+
+func is_group_equal(use_gen: bool = true) -> bool:
 	var vals = []
 	for t in group:
-		vals.append(t.generated_value)
+		if use_gen:
+			vals.append(t.generated_value)
+		else:
+			vals.append(t.dots_value)
 	return vals.min() == vals.max()
 
-func is_notequal() -> bool:
+func is_group_notequal(use_gen: bool = true) -> bool:
 	var t_group = group.duplicate()
-	var first_val = t_group.pop_front().generated_value
+	var first_tile : Tile = t_group.pop_front()
+	var first_val = first_tile.dots_value
+	if use_gen:
+		first_val = first_tile.generated_value
 	for t in t_group:
-		if t.generated_value == first_val:
-			return false
+		if use_gen:
+			if t.generated_value == first_val:
+				return false
+		else:
+			if t.dots_value == first_val:
+				return false
 	return true
-		
