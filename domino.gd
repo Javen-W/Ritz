@@ -22,6 +22,8 @@ static var selected_domino : Domino = null
 var is_picked : bool = false
 var entered_tile1s : Array[Tile] = []
 var entered_tile2s : Array[Tile] = []
+var is_from_panel : bool = false
+var panel_origin_position : Vector2 = Vector2.ZERO
 
 func _ready() -> void:
 	update_pips()
@@ -52,8 +54,16 @@ func rotate_once() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if is_picked and event is InputEventMouseMotion:
-		var camera = get_viewport().get_camera_2d()
-		self.position = camera.get_global_mouse_position() + event.relative
+		var viewport = get_viewport()
+		var camera = viewport.get_camera_2d()
+		
+		if is_from_panel:
+			# Convert viewport position to game world coordinates
+			var world_pos = camera.get_global_mouse_position()
+			self.global_position = world_pos
+		else:
+			# Normal dragging in game world
+			self.position = camera.get_global_mouse_position() + event.relative
 
 func _on_mouse_area_2d_input_event(viewport: Node, event: InputEvent, shape_idx: int) -> void:
 	# Mouse in viewport coordinates.
@@ -62,10 +72,10 @@ func _on_mouse_area_2d_input_event(viewport: Node, event: InputEvent, shape_idx:
 			rotate_once()
 		elif event.is_pressed():
 			domino_picked.emit()
-			# print("Mouse pressed.")
+			if is_from_panel:
+				panel_origin_position = self.position
 		elif event.is_released() and is_picked:
 			domino_released.emit()
-			# print("Mouse released.")
 
 func _on_dots_1_area_2d_area_entered(area: Area2D) -> void:
 	var tile = area.owner as Tile
@@ -125,9 +135,18 @@ func _on_domino_picked() -> void:
 func _on_domino_released() -> void:
 	is_picked = false
 	
+	# If from panel, only try to place if we have entered tiles
+	if is_from_panel:
+		if entered_tile1s.is_empty() or entered_tile2s.is_empty():
+			# Return to panel
+			_return_to_panel()
+			return
+	
 	# Select & validate candidate tile1.
 	var candidate_tile1 = _find_nearest_tile(entered_tile1s, dots1_collision.global_position)
 	if candidate_tile1 == null:
+		if is_from_panel:
+			_return_to_panel()
 		return
 	
 	# Select & validate candidate tile2.
@@ -135,22 +154,32 @@ func _on_domino_released() -> void:
 	temp_tile2s.erase(candidate_tile1)
 	var candidate_tile2 = _find_nearest_tile(temp_tile2s, candidate_tile1.position)
 	if candidate_tile2 == null:
+		if is_from_panel:
+			_return_to_panel()
 		return
 	
 	# Validate candidate tile distance.
 	var tile_dist = candidate_tile1.position.distance_to(candidate_tile2.position)
 	if tile_dist != 64.0:
+		if is_from_panel:
+			_return_to_panel()
 		return
 	
 	# Validate tile domino emptiness.
 	if candidate_tile1.dots_value != -1:
+		if is_from_panel:
+			_return_to_panel()
 		return
 	if candidate_tile2.dots_value != -1:
+		if is_from_panel:
+			_return_to_panel()
 		return 
 	
 	# Attempt domino position update.
 	var pos_updated = update_position_to_tiles(candidate_tile1, candidate_tile2, Vector2i.ZERO)
 	if !pos_updated:
+		if is_from_panel:
+			_return_to_panel()
 		return
 	
 	# Successful candidate tile selections.
@@ -160,11 +189,26 @@ func _on_domino_released() -> void:
 	self.tile2 = candidate_tile2
 	self.tile2.place_dots(self.dots2_value)
 	
+	# Remove from panel stack
+	is_from_panel = false
+	var panel = get_tree().root.get_node("Game/HUD/DominoPanel") as DominoPanel
+	if panel:
+		panel.remove_domino_from_stack(self)
+	
 	# Signal global bus.
 	GameSignalbus.emit_domino_assigned(self)
 	
 	# Debug.
 	print("Domino placement successful: ", self.tile1.global_position.snappedf(64.0) / 64.0, " ", self.tile2.global_position.snappedf(64.0) / 64.0)
+
+func _return_to_panel() -> void:
+	if not is_from_panel:
+		return
+	entered_tile1s.clear()
+	entered_tile2s.clear()
+	self.position = panel_origin_position
+	GameSignalbus.emit_domino_unassigned(self)
+	print("Domino returned to panel")
 
 func _on_domino_selected(domino: Domino) -> void:
 	if domino != self:
