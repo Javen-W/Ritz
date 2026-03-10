@@ -17,12 +17,12 @@ var last_value := 0
 # Child nodes
 @onready var camera2d : Camera2D = $Camera2D
 @onready var tile_nodes : Node2D = $Tiles
-@onready var domino_nodes : Node2D = $Dominos
 @onready var constraint_nodes : Node2D = $Constraints
+@onready var assigned_dominos : Node2D = $AssignedDominos
 
 # Grid storage
 var grid : Dictionary = {} # Vector2i -> Tile
-var dominos : Array[Domino] = []
+# var assigned_dominos : Array[Domino] = []
 var constraints : Array[Constraint] = []
 
 # Constants
@@ -39,6 +39,7 @@ func _ready() -> void:
 	
 	# Connect signals.
 	GameSignalbus.domino_assigned.connect(_on_domino_assigned)
+	GameSignalbus.domino_unassigned.connect(_on_domino_unassigned)
 	
 	# Generate game.
 	generate_tiles()
@@ -49,6 +50,10 @@ func _ready() -> void:
 # --------------------------------------------------------------
 func _on_domino_assigned(domino: Domino) -> void:
 	print("Game: Domino assigned.")
+	if domino.get_parent():
+		domino.get_parent().remove_child(domino)
+	assigned_dominos.add_child(domino)
+	
 	# Check if all conditions have been met for a game win.
 	var all_conditions_met = validate_win_conditions()
 	print("Game: All conditions met? ", all_conditions_met)
@@ -56,6 +61,9 @@ func _on_domino_assigned(domino: Domino) -> void:
 		# Game won!
 		print("Game: Win!")
 		GameSignalbus.emit_game_won()
+
+func _on_domino_unassigned(domino: Domino) -> void:
+	pass
 
 func validate_win_conditions() -> bool:
 	# No empty tiles.
@@ -151,9 +159,7 @@ func dot_sample2(pos: Vector2i) -> int:
 func generate_domino(tile1: Tile, tile2: Tile, is_horizontal: bool) -> Domino:
 	var domino := domino_scene.instantiate() as Domino
 	domino.init(tile1.generated_value, tile2.generated_value, is_horizontal)
-	domino_nodes.add_child(domino)
-	dominos.append(domino)
-	domino.update_position_to_tiles(tile1, tile2, Vector2(750.0, 0.0))
+	GameSignalbus.emit_domino_generated(domino)
 	return domino
 
 # --------------------------------------------------------------
