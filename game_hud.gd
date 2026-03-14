@@ -17,6 +17,7 @@ var _win_message_label: Label
 const SPINNER_CHARS: Array = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
 const SPINNER_INTERVAL: float = 0.08
 const HUD_LAYER: int = 100
+const WIN_OVERLAY_DURATION: float = 4.0   # seconds before auto-dismissing win popup
 const SUCCESS_COLOR := Color(0.2, 0.95, 0.3, 1.0)
 var _spinner_idx: int = 0
 var _spinner_time: float = 0.0
@@ -135,6 +136,13 @@ func _build_win_popup() -> void:
 	_win_message_label.add_theme_color_override("font_color", Color.WHITE)
 	vbox.add_child(_win_message_label)
 
+	var hint := Label.new()
+	hint.text = "(This message will close automatically)"
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hint.add_theme_font_size_override("font_size", 14)
+	hint.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7, 1.0))
+	vbox.add_child(hint)
+
 # --------------------------------------------------------------
 # Per-frame updates: spinner animation + timer countdown
 # --------------------------------------------------------------
@@ -201,3 +209,10 @@ func _on_game_won() -> void:
 	var secs := total_secs % 60
 	_win_message_label.text = "Completed in %02d:%02d" % [mins, secs]
 	_win_overlay.visible = true
+	print("GameHUD: Win overlay shown — will auto-dismiss in %.0fs" % WIN_OVERLAY_DURATION)
+	# Auto-dismiss so the gen panel stays accessible for a new game
+	get_tree().create_timer(WIN_OVERLAY_DURATION).timeout.connect(
+		func() -> void:
+			_win_overlay.visible = false
+			print("GameHUD: Win overlay dismissed — gen panel now accessible")
+	)
