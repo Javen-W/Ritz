@@ -134,3 +134,6 @@ Win condition validation (in `Game.validate_win_conditions()`):
 - Edit `Domino._on_domino_released()` validation logic
 - Key checks: tile distance (currently 64.0), empty tile state, unique tiles
 - Modify Area2D overlap tracking if you change collision detection
+
+### Documentation
+"When working with Godot game development questions, always search for the latest available documentation using the godot-mcp-docs tools. Start with get_documentation_tree() to understand the documentation structure, then use get_documentation_file() to retrieve specific information about classes, tutorials, or features. Prioritize official Godot documentation over general knowledge when providing Godot-related assistance."

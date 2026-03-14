@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://u0dj7t4cpuib"]
+
+[ext_resource type="Script" uid="uid://ddc5dbiv0o61p" path="res://domino_panel.gd" id="1"]
+
+[node name="DominoPanel" type="Node2D"]
+z_index = 100
+script = ExtResource("1")

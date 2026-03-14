@@ -77,22 +77,20 @@ float draw_dots(vec2 uv, int value, vec2 c) {
 float draw_pips(vec2 uv, int value, int side) {
 	if (value == 0) return 0.0;
 
-    // Left half pips
+	// Work in local half-space coordinates (0..1 in x)
 	if (side == 0 && uv.x < 0.5) {
-		vec2 c = vec2(0.55, 0.5);
-		uv.x /= 0.5;
-		return draw_dots(uv, value, c);
-    }
+		vec2 luv = vec2(uv.x * 2.0, uv.y);
+		vec2 c = vec2(0.5, 0.5);
+		return draw_dots(luv, value, c);
+	}
 
-    // Right half pips
 	if (side == 1 && uv.x >= 0.5) {
-		vec2 c = vec2(0.725, 0.5);
-		uv.x /= 0.5;
-		c.x /= 0.5;
-		return draw_dots(uv, value, c);
-    }
+		vec2 luv = vec2((uv.x - 0.5) * 2.0, uv.y);
+		vec2 c = vec2(0.5, 0.5);
+		return draw_dots(luv, value, c);
+	}
 
-    return 0.0;
+	return 0.0;
 }
 
 void fragment() {

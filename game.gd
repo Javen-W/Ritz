@@ -31,11 +31,21 @@ const directions = [
 	Vector2i(0, 1), Vector2i(0, -1)
 ]
 
+# Camera control variables
+var camera_center: Vector2
+const CAMERA_SPEED: float = 200.0  # pixels per second
+
 func _ready() -> void:
 	# Init game.
 	rng.seed = hash(SEED)
 	dot_noise.seed = rng.seed
-	camera2d.offset = Vector2(MAP_SIZE / 2.0, MAP_SIZE / 2.0) * 64.0
+	
+	# Position camera at board center
+	var board_center = Vector2(MAP_SIZE / 2.0, MAP_SIZE / 2.0) * 64.0
+	camera2d.global_position = board_center
+	
+	# Save camera center for reset
+	camera_center = camera2d.global_position
 	
 	# Connect signals.
 	GameSignalbus.domino_assigned.connect(_on_domino_assigned)
@@ -44,23 +54,70 @@ func _ready() -> void:
 	# Generate game.
 	generate_tiles()
 	generate_constraints()
+	print("Game: Generated %d tiles, %d dominos, %d constraints (seed=%d)" % [
+		grid.size(), NUMBER_DOMINOS, constraints.size(), SEED
+	])
+
+func _process(delta: float) -> void:
+	var camera_input = Vector2.ZERO
+	
+	# Get input
+	if Input.is_action_pressed("ui_up"):
+		camera_input.y -= 1
+	if Input.is_action_pressed("ui_down"):
+		camera_input.y += 1
+	if Input.is_action_pressed("ui_left"):
+		camera_input.x -= 1
+	if Input.is_action_pressed("ui_right"):
+		camera_input.x += 1
+	
+	# Move camera if input detected
+	if camera_input != Vector2.ZERO:
+		# Normalize to prevent diagonal boost
+		camera_input = camera_input.normalized()
+		var new_pos = camera2d.global_position + camera_input * CAMERA_SPEED * delta
+		
+		# Apply bounds constraint
+		new_pos = _constrain_camera_position(new_pos)
+		camera2d.global_position = new_pos
+	
+	# Reset camera on space
+	if Input.is_action_just_pressed("ui_select"):
+		camera2d.global_position = camera_center
+
+func _constrain_camera_position(target_pos: Vector2) -> Vector2:
+	var board_size = MAP_SIZE * 64.0
+	var viewport_size = get_viewport().get_visible_rect().size / camera2d.zoom
+	var half_vp_x = viewport_size.x / 2.0
+	var half_vp_y = viewport_size.y / 2.0
+	
+	# Constrain camera so it doesn't go too far off-board
+	# Allow panning but prevent showing only empty space
+	# Camera should stay within reasonable bounds where at least some board is visible
+	
+	# Simple approach: just allow full panning from 0 to board_size for camera position
+	target_pos.x = clampf(target_pos.x, 0, board_size)
+	target_pos.y = clampf(target_pos.y, 0, board_size)
+	
+	return target_pos
 
 # --------------------------------------------------------------
 # Handle signals
 # --------------------------------------------------------------
 func _on_domino_assigned(domino: Domino) -> void:
-	print("Game: Domino assigned.")
 	if domino.get_parent():
 		domino.get_parent().remove_child(domino)
 	assigned_dominos.add_child(domino)
+	var placed_count := assigned_dominos.get_child_count()
+	print("Game: Domino assigned (%d/%d placed)" % [placed_count, NUMBER_DOMINOS])
 	
 	# Check if all conditions have been met for a game win.
-	var all_conditions_met = validate_win_conditions()
-	print("Game: All conditions met? ", all_conditions_met)
+	var all_conditions_met := validate_win_conditions()
 	if all_conditions_met:
-		# Game won!
-		print("Game: Win!")
+		print("Game: 🎉 All constraints satisfied — you win!")
 		GameSignalbus.emit_game_won()
+	elif placed_count == NUMBER_DOMINOS:
+		print("Game: All dominos placed but constraints not yet satisfied")
 
 func _on_domino_unassigned(domino: Domino) -> void:
 	pass
@@ -144,13 +201,13 @@ func dot_sample1(pos: Vector2i) -> int:
 	if noise_sample < 0.5:
 		v = rng.randi_range(0, 6)
 	last_value = v
-	print(noise_sample, "\t", v)
+	# Debug print removed
 	return v
 
 func dot_sample2(pos: Vector2i) -> int:
 	var noise_sample = 3.5 * (dot_noise.get_noise_2d(pos.x, pos.y) + 1.0) # [-1, 1] -> [0, 7]
 	var v = floori(clampf(noise_sample, 0, 6))
-	print(noise_sample, "\t", v)
+	# Debug print removed
 	return v
 
 # --------------------------------------------------------------

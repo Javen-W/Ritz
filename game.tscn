@@ -1,49 +1,20 @@
-[gd_scene load_steps=5 format=3 uid="uid://cidflaxqyhnen"]
+[gd_scene format=3 uid="uid://cidflaxqyhnen"]
 
 [ext_resource type="Script" uid="uid://ba7jsd4138l65" path="res://game.gd" id="1_80nbo"]
 [ext_resource type="FastNoiseLite" uid="uid://cdnr10focog76" path="res://dot_noise.tres" id="2_e2o6t"]
-[ext_resource type="Script" uid="uid://ddc5dbiv0o61p" path="res://domino_panel.gd" id="3_feb5d"]
+[ext_resource type="PackedScene" uid="uid://u0dj7t4cpuib" path="res://domino_panel.tscn" id="3_qwf2d"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_e2o6t"]
-bg_color = Color(0.6, 0.6, 0.6, 0.78431374)
-corner_radius_top_left = 10
-corner_radius_top_right = 10
-corner_radius_bottom_right = 10
-corner_radius_bottom_left = 10
-
-[node name="Game" type="Node2D"]
+[node name="Game" type="Node2D" unique_id=1647598395]
 script = ExtResource("1_80nbo")
 dot_noise = ExtResource("2_e2o6t")
 
-[node name="Camera2D" type="Camera2D" parent="."]
+[node name="Camera2D" type="Camera2D" parent="." unique_id=743661725]
 zoom = Vector2(0.5, 0.5)
 
-[node name="Tiles" type="Node2D" parent="."]
+[node name="Tiles" type="Node2D" parent="." unique_id=1687462993]
 
-[node name="AssignedDominos" type="Node2D" parent="."]
+[node name="AssignedDominos" type="Node2D" parent="." unique_id=330680067]
 
-[node name="Constraints" type="Node2D" parent="."]
+[node name="Constraints" type="Node2D" parent="." unique_id=1621046714]
 
-[node name="HUD" type="CanvasLayer" parent="."]
-layer = -1
-
-[node name="DominoPanel" type="Panel" parent="HUD"]
-show_behind_parent = true
-custom_minimum_size = Vector2(0, 75)
-anchors_preset = -1
-anchor_left = 0.15
-anchor_top = 0.95
-anchor_right = 0.85
-anchor_bottom = 0.975
-offset_left = -1.5258789e-05
-offset_top = -58.799988
-offset_right = -6.1035156e-05
-offset_bottom = 3.3999634
-grow_horizontal = 2
-grow_vertical = 0
-size_flags_horizontal = 4
-mouse_filter = 1
-theme_override_styles/panel = SubResource("StyleBoxFlat_e2o6t")
-script = ExtResource("3_feb5d")
-
-[node name="UnassignedDominos" type="Node2D" parent="HUD/DominoPanel"]
+[node name="DominoPanel" parent="." unique_id=238600838 instance=ExtResource("3_qwf2d")]
