@@ -48,31 +48,36 @@ func _ready() -> void:
 	else:
 		label.text = ""
 
-func generate(rng: RandomNumberGenerator) -> void:
+func generate(rng: RandomNumberGenerator, cfg: GameConfig = null) -> void:
 	if group.is_empty():
 		return
-		
+
+	# Pull thresholds from config or fall back to defaults
+	var p_equal    := cfg.prob_equal       if cfg else 0.85
+	var p_neq      := cfg.prob_not_equal   if cfg else 0.15
+	var p_less     := cfg.prob_less_than   if cfg else 0.10
+	var p_greater  := cfg.prob_greater_than if cfg else 0.10
+
 	# Group metrics
-	var group_sum = 0
+	var group_sum := 0
 	for t in group:
-		# print("Constraint Tile: position={0}, value={1}".format([t.position / 64.0, t.value]))
 		group_sum += t.generated_value
-	
-	# Determine constraint type
-	if group.size() > 1 and is_group_equal(true) and rng.randf() > 0.15:
+
+	# Determine constraint type (evaluated in priority order)
+	if group.size() > 1 and is_group_equal(true) and rng.randf() < p_equal:
 		type = Constraint.Type.EQUAL
-	elif group.size() > 1 and is_group_notequal(true) and rng.randf() < 0.15:
+	elif group.size() > 1 and is_group_notequal(true) and rng.randf() < p_neq:
 		type = Constraint.Type.NOT_EQUAL
-	elif group_sum <= 10 and rng.randf() < 0.10:
+	elif group_sum <= 10 and rng.randf() < p_less:
 		type = Constraint.Type.LESS_THAN
 		target_value = rng.randi_range(group_sum + 1, group_sum + 6)
-	elif group_sum > 0 and rng.randf() < 0.10:
+	elif group_sum > 0 and rng.randf() < p_greater:
 		type = Constraint.Type.GREATER_THAN
 		target_value = rng.randi_range(0, group_sum - 1)
 	else:
 		type = Constraint.Type.SUM
 		target_value = group_sum
-	
+
 	# Determine color
 	color = Color.from_hsv(rng.randf(), 0.95, 1.0, 0.35)
 
