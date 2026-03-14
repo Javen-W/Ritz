@@ -49,11 +49,11 @@ func _make_rounded_rect_polygon(w: float, h: float, r: float, segs: int = 8) -> 
 	var pts := PackedVector2Array()
 	r = minf(r, minf(w / 2.0, h / 2.0))
 	var corners := [Vector2(-w/2+r, -h/2+r), Vector2(w/2-r, -h/2+r),
-	                Vector2(w/2-r,  h/2-r),  Vector2(-w/2+r, h/2-r)]
+					Vector2(w/2-r,  h/2-r),  Vector2(-w/2+r, h/2-r)]
 	var angles := [PI, 3*PI/2, 0.0, PI/2]
 	for i in 4:
 		for s in segs + 1:
-			var a := angles[i] + (PI/2) * float(s) / float(segs)
+			var a : float = angles[i] + (PI/2) * float(s) / float(segs)
 			pts.append(corners[i] + Vector2(cos(a), sin(a)) * r)
 	return pts
 
