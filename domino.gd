@@ -77,7 +77,8 @@ func _on_mouse_area_2d_input_event(viewport: Node, event: InputEvent, shape_idx:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.double_click:
 			_mouse_pressed = false  # cancel any pending drag from the first click
-			rotate_once()
+			if not is_placed:
+				rotate_once()
 		elif event.is_pressed():
 			if Domino.selected_domino == self:
 				_mouse_pressed = true
@@ -119,15 +120,37 @@ func _erase_entered_tile1(tile: Tile) -> void:
 		self.tile1.remove_dots()
 		self.tile1 = null
 
-func _find_nearest_tile(tiles: Array[Tile], dots_pos: Vector2) -> Tile:
-	var min_dist = INF
-	var min_tile = null
-	for t in tiles:
-		var new_dist = t.position.distance_to(dots_pos)
-		if new_dist <= min_dist:
-			min_dist = new_dist
-			min_tile = t
-	return min_tile
+func _find_best_tile_pair() -> Array[Tile]:
+	# Union of both overlap lists so we consider all nearby tiles regardless of which
+	# dots area detected them — covers slightly off-center and perpendicular drops.
+	var candidates: Array[Tile] = entered_tile1s.duplicate()
+	for t in entered_tile2s:
+		if not candidates.has(t):
+			candidates.append(t)
+
+	var best_pair: Array[Tile] = []
+	var best_score := INF
+	for i in candidates.size():
+		var ta := candidates[i]
+		if ta.dots_value != -1:
+			continue
+		for j in candidates.size():
+			if i == j:
+				continue
+			var tb := candidates[j]
+			if tb.dots_value != -1:
+				continue
+			# Accept only grid-adjacent tiles (use tolerance against float rounding)
+			if absf(ta.position.distance_to(tb.position) - 64.0) > 0.5:
+				continue
+			# Score: sum of distances from each dots area to its candidate tile.
+			# Lower score = better alignment with the domino's current orientation.
+			var score := (dots1_collision.global_position.distance_to(ta.global_position)
+						+ dots2_collision.global_position.distance_to(tb.global_position))
+			if score < best_score:
+				best_score = score
+				best_pair = [ta, tb]
+	return best_pair
 
 func _on_domino_picked() -> void:
 	is_picked = true
@@ -153,82 +176,45 @@ func _on_domino_picked() -> void:
 
 func _on_domino_released() -> void:
 	is_picked = false
-	
-	# If from panel, only try to place if we have entered tiles
-	if is_from_panel:
-		if entered_tile1s.is_empty() or entered_tile2s.is_empty():
-			_return_to_panel()
-			return
-	
-	# Select & validate candidate tile1.
-	var candidate_tile1 = _find_nearest_tile(entered_tile1s, dots1_collision.global_position)
-	if candidate_tile1 == null:
+
+	var pair := _find_best_tile_pair()
+	if pair.is_empty():
 		if is_from_panel:
 			_return_to_panel()
 		return
-	
-	# Select & validate candidate tile2.
-	var temp_tile2s = entered_tile2s.duplicate()
-	temp_tile2s.erase(candidate_tile1)
-	var candidate_tile2 = _find_nearest_tile(temp_tile2s, candidate_tile1.position)
-	if candidate_tile2 == null:
+
+	var t1 := pair[0]  # receives dots1_value
+	var t2 := pair[1]  # receives dots2_value
+
+	# Snap domino position to the center of the tile pair
+	if not update_position_to_tiles(t1, t2, Vector2.ZERO):
 		if is_from_panel:
 			_return_to_panel()
 		return
-	
-	# Validate candidate tile distance.
-	var tile_dist = candidate_tile1.position.distance_to(candidate_tile2.position)
-	if tile_dist != 64.0:
-		if is_from_panel:
-			_return_to_panel()
-		return
-	
-	# Validate tile domino emptiness.
-	if candidate_tile1.dots_value != -1:
-		if is_from_panel:
-			_return_to_panel()
-		return
-	if candidate_tile2.dots_value != -1:
-		if is_from_panel:
-			_return_to_panel()
-		return 
-	
-	# Attempt domino position update.
-	var pos_updated = update_position_to_tiles(candidate_tile1, candidate_tile2, Vector2i.ZERO)
-	if !pos_updated:
-		if is_from_panel:
-			_return_to_panel()
-		return
-	
-	# Clear entered tile lists before placement to prevent area_exited from removing dots
+
+	# Force rotation to match the tile pair axis so domino always looks correct
+	var pair_dx := absf(t1.position.x - t2.position.x)
+	var pair_dy := absf(t1.position.y - t2.position.y)
+	self.rotation = -PI/2 if pair_dy > pair_dx else 0.0
+
+	# Clear overlap lists BEFORE placing dots to prevent area_exited from undoing placement
 	entered_tile1s.clear()
 	entered_tile2s.clear()
-	
-	# Successful candidate tile selections.
-	self.tile1 = candidate_tile1
+
+	self.tile1 = t1
 	self.tile1.place_dots(self.dots1_value)
-	
-	self.tile2 = candidate_tile2
+	self.tile2 = t2
 	self.tile2.place_dots(self.dots2_value)
-	
-	# Mark as placed so area_exited doesn't undo our placement
+
 	is_placed = true
-	
-	# Reset scale so domino fits the board tile grid
-	# Domino meshes are 128x64 (two tiles wide); use 1.0 scale for board placement
 	self.scale = Vector2.ONE
-	# Ensure placed dominos render above tile overlays but below constraint indicators
 	self.z_index = 3
-	
-	# Domino is already in the game tree, no need to move it
-	
-	# Remove from panel stack
 	is_from_panel = false
-	var panel = get_tree().root.get_node("Game/DominoPanel") as DominoPanel
+
+	var panel := get_tree().root.get_node("Game/DominoPanel") as DominoPanel
 	if panel:
 		panel.remove_domino_from_stack(self)
-	
-	# Signal global bus.
+
 	GameSignalbus.emit_domino_assigned(self)
 	print("Domino: Placed [%d|%d] at tiles %s / %s" % [
 		dots1_value, dots2_value,
