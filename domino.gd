@@ -120,11 +120,16 @@ func _find_nearest_tile(tiles: Array[Tile], dots_pos: Vector2) -> Tile:
 
 func _on_domino_picked() -> void:
 	is_picked = true
-	
-	# Dominoes are already in the game world, no need to reparent
-	if is_from_panel:
-		panel_origin_parent = get_parent()
-	
+
+	# If this domino is placed on the board, immediately unassign it and
+	# convert it back to a panel domino so it returns to the panel on drop.
+	if is_placed:
+		is_placed = false
+		is_from_panel = true
+		var panel := get_tree().root.get_node_or_null("Game/DominoPanel") as DominoPanel
+		if panel:
+			panel.add_domino_to_stack(self)
+
 	if self.tile1 != null:
 		self.tile1.remove_dots()
 		self.tile1 = null
@@ -198,8 +203,8 @@ func _on_domino_released() -> void:
 	# Reset scale so domino fits the board tile grid
 	# Domino meshes are 128x64 (two tiles wide); use 1.0 scale for board placement
 	self.scale = Vector2.ONE
-	# Ensure placed dominos render above tiles
-	self.z_index = 5
+	# Ensure placed dominos render above tile overlays but below constraint indicators
+	self.z_index = 3
 	
 	# Domino is already in the game tree, no need to move it
 	
