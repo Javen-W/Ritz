@@ -5,7 +5,7 @@ class_name DominoPanel
 
 var domino_stack: Array[Domino] = []
 var current_index: int = 0
-const VISIBLE_COUNT: int = 5
+const VISIBLE_COUNT: int = 7
 const DOMINO_SPACING: float = 150.0
 const PANEL_OFFSET_Y: float = -90.0  # World-space Y offset above camera bottom edge
 const PANEL_HEIGHT: float = 160.0
@@ -50,7 +50,7 @@ func _process(_delta: float) -> void:
 	self.position = camera.global_position + Vector2(0.0, viewport_size.y / (2.0 * camera.zoom.y) + PANEL_OFFSET_Y)
 
 	# Update background to 75% of viewport width in world space (only when changed)
-	var w := viewport_size.x / camera.zoom.x * 0.75
+	var w := viewport_size.x / camera.zoom.x * 0.50
 	if not is_equal_approx(w, _last_bg_width):
 		_last_bg_width = w
 		_bg.polygon = PackedVector2Array([
@@ -104,9 +104,10 @@ func shuffle_stack() -> void:
 		domino_stack[i] = domino_stack[j]
 		domino_stack[j] = tmp
 	current_index = 0
-	# Reset all panel dominos to vertical orientation after shuffle
+	# Shuffle all panel domino orientations.
 	for domino in domino_stack:
-		domino.rotation = -PI / 2.0
+		for j in rng.randi_range(0, 3):
+			domino.rotate_once()
 	_layout_dominos()
 	print("DominoPanel: Shuffled stack (%d dominos)" % domino_stack.size())
 
