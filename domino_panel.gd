@@ -11,7 +11,7 @@ const PANEL_OFFSET_Y: float = -90.0  # World-space Y offset above camera bottom 
 const PANEL_HEIGHT: float = 160.0
 const CORNER_RADIUS: float = 20.0
 # Reserve screen space for the always-visible GenPanel on the right
-const GEN_PANEL_WIDTH: float = 290.0
+const GEN_PANEL_WIDTH: float = 340.0
 
 var _bg: Polygon2D
 var _last_bg_width: float = 0.0

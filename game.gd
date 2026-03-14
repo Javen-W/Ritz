@@ -145,15 +145,21 @@ func _generate_game_async() -> void:
 	
 	await _generate_tiles_async()
 	
-	# Refine camera center to the actual centroid of generated tiles
+	# Refine camera center to the actual centroid of generated tiles,
+	# shifted right so the centroid appears centered in the area left of the GenPanel.
 	if grid.size() > 0:
 		var centroid := Vector2.ZERO
 		for tile_pos: Vector2i in grid.keys():
 			centroid += Vector2(tile_pos) * 64.0
 		centroid /= float(grid.size())
-		camera_center = centroid
-		camera2d.global_position = centroid
-		print("Game: Camera centroid → %s" % centroid)
+		var vp_w := get_viewport().get_visible_rect().size.x
+		var gen_panel_w := float(GenPanel.PANEL_WIDTH)
+		# Usable area center is (vp_w - gen_panel_w)/2 from the left edge,
+		# while camera center is vp_w/2 — shift right by the difference.
+		var offset_x := gen_panel_w * 0.5 / camera2d.zoom.x
+		camera_center = centroid + Vector2(offset_x, 0.0)
+		camera2d.global_position = camera_center
+		print("Game: Camera set to %s (centroid %s + panel offset %.0fpx)" % [camera_center, centroid, gen_panel_w * 0.5])
 	
 	GameSignalbus.emit_generation_update("Generating constraints...")
 	await get_tree().process_frame
@@ -174,16 +180,17 @@ func _process(delta: float) -> void:
 		elapsed_time += delta
 	
 	var camera_input = Vector2.ZERO
-	
-	# Get input
-	if Input.is_action_pressed("ui_up"):
-		camera_input.y -= 1
-	if Input.is_action_pressed("ui_down"):
-		camera_input.y += 1
-	if Input.is_action_pressed("ui_left"):
-		camera_input.x -= 1
-	if Input.is_action_pressed("ui_right"):
-		camera_input.x += 1
+
+	# Don't pan camera while a UI control (e.g. a gen-panel spinbox) has keyboard focus
+	if get_viewport().gui_get_focus_owner() == null:
+		if Input.is_action_pressed("ui_up"):
+			camera_input.y -= 1
+		if Input.is_action_pressed("ui_down"):
+			camera_input.y += 1
+		if Input.is_action_pressed("ui_left"):
+			camera_input.x -= 1
+		if Input.is_action_pressed("ui_right"):
+			camera_input.x += 1
 	
 	# Move camera if input detected
 	if camera_input != Vector2.ZERO:

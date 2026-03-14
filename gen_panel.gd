@@ -1,7 +1,7 @@
 extends CanvasLayer
 class_name GenPanel
 
-const PANEL_WIDTH    := 290
+const PANEL_WIDTH    := 340
 const LABEL_MIN_W    := 110
 const SECTION_COLOR  := Color(0.55, 0.78, 1.0, 1.0)
 const CONTROL_FONT_SIZE := 12
@@ -116,7 +116,7 @@ func _build_ui() -> void:
 
 	_path_branch_spin = _make_spinbox(0.0, 1.0, 0.05)
 	_path_branch_spin.custom_arrow_step = 0.1
-	content.add_child(_row("Path Branch P", _path_branch_spin))
+	content.add_child(_row("P(Branch Path)", _path_branch_spin))
 
 	_p_equal_tile_spin = _make_spinbox(0.0, 1.0, 0.05)
 	_p_equal_tile_spin.custom_arrow_step = 0.1
@@ -176,7 +176,7 @@ func _build_ui() -> void:
 	_grp_max_spin = _make_spinbox(1, 6, 1)
 	content.add_child(_row("Group Max", _grp_max_spin))
 
-	_skip_prob_pair     = _slider_row("Skip Prob",    0.0, 1.0, 0.25); content.add_child(_skip_prob_pair[2])
+	_skip_prob_pair     = _slider_row("P(Skip)",      0.0, 1.0, 0.25); content.add_child(_skip_prob_pair[2])
 	_skip_max_size_spin = _make_spinbox(0, 6, 1)
 	content.add_child(_row("Skip Max Size", _skip_max_size_spin))
 
@@ -386,7 +386,7 @@ func _on_copy_config_pressed() -> void:
 		"prob_less_than":         cfg.prob_less_than,
 		"prob_greater_than":      cfg.prob_greater_than,
 	}
-	DisplayServer.clipboard_set(JSON.stringify(data, "\t"))
+	DisplayServer.clipboard_set(JSON.stringify(data, "\t", false))
 	print("GenPanel: Config copied to clipboard")
 
 func _on_generate_pressed() -> void:
