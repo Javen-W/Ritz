@@ -27,7 +27,7 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
 	# Keep panel anchored to the bottom of the camera view in world space
-	var camera := game.camera2d
+	var camera: Camera2D = game.camera2d
 	var viewport_size := get_viewport().get_visible_rect().size
 	self.position = camera.global_position + Vector2(0.0, viewport_size.y / (2.0 * camera.zoom.y) + PANEL_OFFSET_Y)
 
