@@ -27,6 +27,10 @@ var panel_origin_position : Vector2 = Vector2.ZERO
 var panel_origin_parent: Node = null
 var is_placed : bool = false
 
+var _mouse_pressed: bool = false
+var _press_world_pos: Vector2 = Vector2.ZERO
+const DRAG_THRESHOLD_SQ: float = 64.0  # 8 px radius before drag begins
+
 func _ready() -> void:
 	update_pips()
 	if self.is_horizontal:
@@ -54,25 +58,32 @@ func rotate_once() -> void:
 	rotate(deg_to_rad(-90.0))
 
 func _unhandled_input(event: InputEvent) -> void:
-	if is_picked and event is InputEventMouseMotion:
-		var viewport = get_viewport()
-		var camera = viewport.get_camera_2d()
-		var world_pos = camera.get_global_mouse_position()
-		self.global_position = world_pos
+	if event is InputEventMouseMotion:
+		# Start dragging only once the mouse has moved far enough from the press point
+		if _mouse_pressed and not is_picked and Domino.selected_domino == self:
+			var camera := get_viewport().get_camera_2d()
+			if camera.get_global_mouse_position().distance_squared_to(_press_world_pos) > DRAG_THRESHOLD_SQ:
+				domino_picked.emit()
+		if is_picked:
+			var camera := get_viewport().get_camera_2d()
+			self.global_position = camera.get_global_mouse_position()
+	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.is_pressed():
+		if _mouse_pressed or is_picked:
+			_mouse_pressed = false
+			if is_picked:
+				domino_released.emit()
 
 func _on_mouse_area_2d_input_event(viewport: Node, event: InputEvent, shape_idx: int) -> void:
-	# Mouse in viewport coordinates.
-	if event is InputEventMouseButton:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.double_click:
+			_mouse_pressed = false  # cancel any pending drag from the first click
 			rotate_once()
 		elif event.is_pressed():
-			# Only allow picking if this is the selected domino
 			if Domino.selected_domino == self:
-				domino_picked.emit()
+				_mouse_pressed = true
+				_press_world_pos = get_viewport().get_camera_2d().get_global_mouse_position()
 				if is_from_panel:
 					panel_origin_position = self.position
-		elif event.is_released() and is_picked:
-			domino_released.emit()
 
 func _on_dots_1_area_2d_area_entered(area: Area2D) -> void:
 	var tile = area.owner as Tile

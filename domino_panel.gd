@@ -9,6 +9,7 @@ const VISIBLE_COUNT: int = 7
 const DOMINO_SPACING: float = 150.0
 const PANEL_OFFSET_Y: float = -90.0  # World-space Y offset above camera bottom edge
 const PANEL_HEIGHT: float = 160.0
+const CORNER_RADIUS: float = 20.0
 
 var _bg: Polygon2D
 var _last_bg_width: float = 0.0
@@ -31,16 +32,30 @@ func _ready() -> void:
 
 	var reset_btn := Button.new()
 	reset_btn.text = "↺ Reset"
+	reset_btn.focus_mode = Control.FOCUS_NONE
 	_button_container.add_child(reset_btn)
 	reset_btn.pressed.connect(_on_reset_button_pressed)
 
 	var shuffle_btn := Button.new()
 	shuffle_btn.text = "⇄ Shuffle"
+	shuffle_btn.focus_mode = Control.FOCUS_NONE
 	_button_container.add_child(shuffle_btn)
 	shuffle_btn.pressed.connect(shuffle_stack)
 
 	GameSignalbus.domino_generated.connect(_on_domino_generated)
 	GameSignalbus.domino_unassigned.connect(_on_domino_unassigned)
+
+func _make_rounded_rect_polygon(w: float, h: float, r: float, segs: int = 8) -> PackedVector2Array:
+	var pts := PackedVector2Array()
+	r = minf(r, minf(w / 2.0, h / 2.0))
+	var corners := [Vector2(-w/2+r, -h/2+r), Vector2(w/2-r, -h/2+r),
+	                Vector2(w/2-r,  h/2-r),  Vector2(-w/2+r, h/2-r)]
+	var angles := [PI, 3*PI/2, 0.0, PI/2]
+	for i in 4:
+		for s in segs + 1:
+			var a := angles[i] + (PI/2) * float(s) / float(segs)
+			pts.append(corners[i] + Vector2(cos(a), sin(a)) * r)
+	return pts
 
 func _process(_delta: float) -> void:
 	var camera: Camera2D = game.camera2d
@@ -53,15 +68,13 @@ func _process(_delta: float) -> void:
 	var w := viewport_size.x / camera.zoom.x * 0.50
 	if not is_equal_approx(w, _last_bg_width):
 		_last_bg_width = w
-		_bg.polygon = PackedVector2Array([
-			Vector2(-w / 2.0, -PANEL_HEIGHT / 2.0), Vector2(w / 2.0, -PANEL_HEIGHT / 2.0),
-			Vector2(w / 2.0, PANEL_HEIGHT / 2.0), Vector2(-w / 2.0, PANEL_HEIGHT / 2.0)
-		])
+		_bg.polygon = _make_rounded_rect_polygon(w, PANEL_HEIGHT, CORNER_RADIUS)
 
-	# Position buttons to the right of the domino row in screen space
+	# Position buttons just outside the right edge of the panel background
 	var panel_screen_y := viewport_size.y + PANEL_OFFSET_Y * camera.zoom.y
+	var panel_right_screen_x := viewport_size.x / 2.0 + _last_bg_width / 2.0 * camera.zoom.x + 8.0
 	_button_container.position = Vector2(
-		viewport_size.x / 2.0 + (VISIBLE_COUNT - 1) / 2.0 * DOMINO_SPACING * camera.zoom.x + 20.0,
+		panel_right_screen_x,
 		panel_screen_y - _button_container.size.y / 2.0
 	)
 
@@ -82,11 +95,15 @@ func _on_domino_unassigned(domino: Domino) -> void:
 
 func add_domino_to_stack(domino: Domino) -> void:
 	if not domino_stack.has(domino):
+		var saved_global := domino.global_position
 		if domino.get_parent():
 			domino.get_parent().remove_child(domino)
 		add_child(domino)
 		domino_stack.append(domino)
 		domino.is_from_panel = true
+		# Restore world position so a picked domino doesn't flicker when reparented
+		if domino.is_picked:
+			domino.global_position = saved_global
 		print("DominoPanel: Added domino — stack size now %d" % domino_stack.size())
 
 	_layout_dominos()
