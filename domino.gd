@@ -59,6 +59,8 @@ func rotate_once() -> void:
 	rotate(deg_to_rad(90.0)) # (Negative -> CCW).
 
 func _unhandled_input(event: InputEvent) -> void:
+	if GameSignalbus.interaction_blocked:
+		return
 	if event is InputEventMouseMotion:
 		# Start dragging only once the mouse has moved far enough from the press point
 		if _mouse_pressed and not is_picked and Domino.selected_domino == self:
@@ -75,6 +77,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				domino_released.emit()
 
 func _on_mouse_area_2d_input_event(viewport: Node, event: InputEvent, shape_idx: int) -> void:
+	if GameSignalbus.interaction_blocked:
+		return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.double_click:
 			_mouse_pressed = false
