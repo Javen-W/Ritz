@@ -1,6 +1,8 @@
 extends Node2D
 class_name Game
 
+enum GameState { GENERATING, ACTIVE, FINISHED }
+
 @export var MAP_SIZE := 30
 @export var NUMBER_DOMINOS := 10
 @export var SEED := 777
@@ -35,6 +37,10 @@ const directions = [
 var camera_center: Vector2
 const CAMERA_SPEED: float = 200.0  # pixels per second
 
+# Game state
+var current_state: GameState = GameState.GENERATING
+var elapsed_time: float = 0.0
+
 func _ready() -> void:
 	# Init game.
 	rng.seed = hash(SEED)
@@ -51,14 +57,54 @@ func _ready() -> void:
 	GameSignalbus.domino_assigned.connect(_on_domino_assigned)
 	GameSignalbus.domino_unassigned.connect(_on_domino_unassigned)
 	
-	# Generate game.
-	generate_tiles()
-	generate_constraints()
+	# Kick off async game generation.
+	_generate_game_async()
+
+# --------------------------------------------------------------
+# Game state FSM
+# --------------------------------------------------------------
+func _set_state(state: GameState) -> void:
+	current_state = state
+	match state:
+		GameState.GENERATING:
+			GameSignalbus.interaction_blocked = true
+		GameState.ACTIVE:
+			GameSignalbus.interaction_blocked = false
+			elapsed_time = 0.0
+		GameState.FINISHED:
+			GameSignalbus.interaction_blocked = true
+	GameSignalbus.emit_game_state_changed(state)
+	const STATE_NAMES := ["GENERATING", "ACTIVE", "FINISHED"]
+	print("Game: State → %s" % STATE_NAMES[state])
+
+# --------------------------------------------------------------
+# Async game generation
+# --------------------------------------------------------------
+func _generate_game_async() -> void:
+	_set_state(GameState.GENERATING)
+	GameSignalbus.emit_generation_update("Starting generation...")
+	await get_tree().process_frame
+	
+	await _generate_tiles_async()
+	
+	GameSignalbus.emit_generation_update("Generating constraints...")
+	await get_tree().process_frame
+	
+	await _generate_constraints_async()
+	
+	GameSignalbus.emit_generation_update("Generation complete!")
+	await get_tree().process_frame
+	
 	print("Game: Generated %d tiles, %d dominos, %d constraints (seed=%d)" % [
 		grid.size(), NUMBER_DOMINOS, constraints.size(), SEED
 	])
+	_set_state(GameState.ACTIVE)
 
 func _process(delta: float) -> void:
+	# Advance the play timer only while the game is active.
+	if current_state == GameState.ACTIVE:
+		elapsed_time += delta
+	
 	var camera_input = Vector2.ZERO
 	
 	# Get input
@@ -115,6 +161,7 @@ func _on_domino_assigned(domino: Domino) -> void:
 	var all_conditions_met := validate_win_conditions()
 	if all_conditions_met:
 		print("Game: 🎉 All constraints satisfied — you win!")
+		_set_state(GameState.FINISHED)
 		GameSignalbus.emit_game_won()
 	elif placed_count == NUMBER_DOMINOS:
 		print("Game: All dominos placed but constraints not yet satisfied")
@@ -135,10 +182,11 @@ func validate_win_conditions() -> bool:
 	return true
 
 # --------------------------------------------------------------
-# Generate snake-like path of dominoes (2 tiles each)
+# Generate snake-like path of dominoes (2 tiles each) — async
 # --------------------------------------------------------------
-func generate_tiles() -> void:
+func _generate_tiles_async() -> void:
 	var pos := Vector2i(MAP_SIZE / 2, MAP_SIZE / 2)
+	var domino_count := 0
 	
 	while grid.size() < NUMBER_DOMINOS * 2:
 		# Set position-1
@@ -171,6 +219,13 @@ func generate_tiles() -> void:
 		# Generate domino
 		var is_horizontal = abs(pos2 - pos1) == Vector2i(1, 0)
 		var domino := generate_domino(tile1, tile2, is_horizontal)
+		
+		domino_count += 1
+		GameSignalbus.emit_generation_update(
+			"Generated domino %d / %d..." % [domino_count, NUMBER_DOMINOS]
+		)
+		# Yield a frame so the overlay updates and tiles become visible incrementally.
+		await get_tree().process_frame
 		
 		# Update next position
 		if rng.randf() < 0.5:
@@ -220,13 +275,15 @@ func generate_domino(tile1: Tile, tile2: Tile, is_horizontal: bool) -> Domino:
 	return domino
 
 # --------------------------------------------------------------
-# Generate non-overlapping constraints
+# Generate non-overlapping constraints — async
 # --------------------------------------------------------------
-func generate_constraints() -> void:
+func _generate_constraints_async() -> void:
 	var remaining_tiles : Array = grid.keys().duplicate()
 	
 	const MIN_SIZE := 1
 	const MAX_SIZE := 6
+	
+	var constraint_count := 0
 	
 	# Populate constraints
 	while remaining_tiles.size() >= MIN_SIZE:
@@ -268,6 +325,12 @@ func generate_constraints() -> void:
 		c.generate(rng)
 		constraint_nodes.add_child(c)
 		constraints.append(c)
+		
+		constraint_count += 1
+		GameSignalbus.emit_generation_update(
+			"Generated constraint %d (%d tiles remaining)..." % [constraint_count, remaining_tiles.size()]
+		)
+		await get_tree().process_frame
 
 func shuffle_array(a: Array) -> Array:
 	var t = a.duplicate()

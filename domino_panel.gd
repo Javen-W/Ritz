@@ -40,7 +40,7 @@ func _ready() -> void:
 	shuffle_btn.text = "⇄ Shuffle"
 	shuffle_btn.focus_mode = Control.FOCUS_NONE
 	_button_container.add_child(shuffle_btn)
-	shuffle_btn.pressed.connect(shuffle_stack)
+	shuffle_btn.pressed.connect(_on_shuffle_button_pressed)
 
 	GameSignalbus.domino_generated.connect(_on_domino_generated)
 	GameSignalbus.domino_unassigned.connect(_on_domino_unassigned)
@@ -188,5 +188,12 @@ func reset_all_dominos() -> void:
 		add_domino_to_stack(domino)
 	print("DominoPanel: Reset %d placed dominos back to panel" % to_reset.size())
 
+func _on_shuffle_button_pressed() -> void:
+	if GameSignalbus.interaction_blocked:
+		return
+	shuffle_stack()
+
 func _on_reset_button_pressed() -> void:
+	if GameSignalbus.interaction_blocked:
+		return
 	reset_all_dominos()

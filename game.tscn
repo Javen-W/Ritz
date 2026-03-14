@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://ba7jsd4138l65" path="res://game.gd" id="1_80nbo"]
 [ext_resource type="FastNoiseLite" uid="uid://cdnr10focog76" path="res://dot_noise.tres" id="2_e2o6t"]
 [ext_resource type="PackedScene" uid="uid://u0dj7t4cpuib" path="res://domino_panel.tscn" id="3_qwf2d"]
+[ext_resource type="Script" uid="uid://cgmxf8o3nvkry" path="res://game_hud.gd" id="4_hud01"]
 
 [node name="Game" type="Node2D" unique_id=1647598395]
 script = ExtResource("1_80nbo")
@@ -18,3 +19,6 @@ zoom = Vector2(0.5, 0.5)
 [node name="Constraints" type="Node2D" parent="." unique_id=1621046714]
 
 [node name="DominoPanel" parent="." unique_id=238600838 instance=ExtResource("3_qwf2d")]
+
+[node name="GameHUD" type="CanvasLayer" parent="." unique_id=987654321]
+script = ExtResource("4_hud01")
