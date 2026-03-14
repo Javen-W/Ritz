@@ -119,9 +119,8 @@ func _rotate_placed_domino() -> void:
 	var pos2  := Vector2i(roundi(tile2.position.x / 64.0), roundi(tile2.position.y / 64.0))
 
 	# Directions perpendicular to the current pair axis
-	var perp_dirs: Array[Vector2i] = [Vector2i(0, 1), Vector2i(0, -1)] if is_h \
-	                               else [Vector2i(1, 0), Vector2i(-1, 0)]
-
+	var perp_dirs = [Vector2i(0, 1), Vector2i(0, -1)] if is_h else [Vector2i(1, 0), Vector2i(-1, 0)]
+	
 	# Find the closest valid perpendicular pair that shares one current tile.
 	# anchor = the tile that stays; new_tile = the incoming neighbour.
 	var best_t1: Tile = null
@@ -132,7 +131,7 @@ func _rotate_placed_domino() -> void:
 		var anchor_tile: Tile = game.grid.get(anchor_pos)
 		var anchor_is_t1 := (anchor_tile == tile1)
 		for dir in perp_dirs:
-			var new_pos := anchor_pos + dir
+			var new_pos : Vector2i = anchor_pos + dir
 			if not game.grid.has(new_pos):
 				continue
 			var new_tile: Tile = game.grid[new_pos]
