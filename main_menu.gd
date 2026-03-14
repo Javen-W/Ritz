@@ -39,6 +39,8 @@ var _bg_config:    GameConfig
 var _bg_grid:      Dictionary   # Vector2i -> Tile
 var _bg_last_val:  int = 0
 var _bg_generating: bool = false
+# Set to true when leaving the scene so in-flight coroutines abort cleanly.
+var _bg_stop: bool = false
 
 # Camera pan state
 var _cam_dir:      Vector2 = Vector2.RIGHT
@@ -105,6 +107,7 @@ func _start_new_bg_cycle() -> void:
 	_cam_reset_t = 0.0
 
 	_bg_generating = true
+	_bg_stop = false
 	_generate_bg_async()
 
 
@@ -117,9 +120,17 @@ func _clear_bg() -> void:
 
 
 func _generate_bg_async() -> void:
+	if _bg_stop or not is_inside_tree():
+		return
 	await get_tree().process_frame
+	if _bg_stop or not is_inside_tree():
+		return
 	await _generate_bg_tiles_async()
+	if _bg_stop or not is_inside_tree():
+		return
 	await get_tree().process_frame
+	if _bg_stop or not is_inside_tree():
+		return
 	await _generate_bg_constraints_async()
 	_bg_generating = false
 	print("MainMenu: Background generation complete (%d tiles)" % _bg_grid.size())
@@ -150,7 +161,11 @@ func _generate_bg_tiles_async() -> void:
 		_generate_bg_tile(pos2)
 		placed += 1
 
+		if _bg_stop or not is_inside_tree():
+			return
 		await get_tree().process_frame
+		if _bg_stop or not is_inside_tree():
+			return
 
 		if _bg_rng.randf() < _bg_config.tile_path_branch_prob:
 			pos = pos2 + _directions[_bg_rng.randi() % _directions.size()]
@@ -201,7 +216,11 @@ func _generate_bg_constraints_async() -> void:
 		c.generate(_bg_rng, _bg_config)
 		_bg_constraints.add_child(c)
 
+		if _bg_stop or not is_inside_tree():
+			return
 		await get_tree().process_frame
+		if _bg_stop or not is_inside_tree():
+			return
 
 
 func _bg_in_bounds(v: Vector2i) -> bool:
@@ -364,6 +383,7 @@ func _build_ui_layer() -> void:
 # ── Button Handlers ──────────────────────────────────────────────────────────
 
 func _on_play_pressed() -> void:
+	_bg_stop = true
 	print("MainMenu: Transitioning to game scene")
 	get_tree().change_scene_to_file("res://game.tscn")
 
@@ -373,5 +393,6 @@ func _on_options_pressed() -> void:
 
 
 func _on_exit_pressed() -> void:
+	_bg_stop = true
 	print("MainMenu: Exit requested")
 	get_tree().quit()
