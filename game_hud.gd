@@ -143,6 +143,17 @@ func _build_win_popup() -> void:
 	hint.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7, 1.0))
 	vbox.add_child(hint)
 
+	var menu_btn := Button.new()
+	menu_btn.text = "⌂  Main Menu"
+	menu_btn.focus_mode = Control.FOCUS_NONE
+	menu_btn.custom_minimum_size = Vector2(180, 38)
+	menu_btn.pressed.connect(func() -> void:
+		SaveManager.clear_save()
+		get_tree().change_scene_to_file("res://main_menu.tscn")
+	)
+	MusicManager.setup_button(menu_btn)
+	vbox.add_child(menu_btn)
+
 # --------------------------------------------------------------
 # Per-frame updates: spinner animation + timer countdown
 # --------------------------------------------------------------
