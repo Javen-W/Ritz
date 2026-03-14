@@ -52,7 +52,7 @@ func _ready() -> void:
 	config.noise_octaves = dot_noise.fractal_octaves
 	_apply_config(config)
 
-	# Position camera at board center
+	# Position camera at board center; refined to tile centroid after generation
 	var board_center = Vector2(MAP_SIZE / 2.0, MAP_SIZE / 2.0) * 64.0
 	camera2d.global_position = board_center
 	camera_center = camera2d.global_position
@@ -105,7 +105,7 @@ func regenerate(new_config: GameConfig) -> void:
 	_clear_game()
 	var board_center := Vector2(MAP_SIZE / 2.0, MAP_SIZE / 2.0) * 64.0
 	camera2d.global_position = board_center
-	camera_center = camera2d.global_position
+	camera_center = board_center
 	_generate_game_async()
 
 func _clear_game() -> void:
@@ -142,6 +142,16 @@ func _generate_game_async() -> void:
 	await get_tree().process_frame
 	
 	await _generate_tiles_async()
+	
+	# Refine camera center to the actual centroid of generated tiles
+	if grid.size() > 0:
+		var centroid := Vector2.ZERO
+		for tile_pos: Vector2i in grid.keys():
+			centroid += Vector2(tile_pos) * 64.0
+		centroid /= float(grid.size())
+		camera_center = centroid
+		camera2d.global_position = centroid
+		print("Game: Camera centroid → %s" % centroid)
 	
 	GameSignalbus.emit_generation_update("Generating constraints...")
 	await get_tree().process_frame
@@ -284,7 +294,7 @@ func _generate_tiles_async() -> void:
 		await get_tree().process_frame
 		
 		# Update next position
-		if rng.randf() < 0.5:
+		if rng.randf() < config.tile_path_branch_prob:
 			pos = pos2 + directions[rng.randi() % directions.size()]
 		else:
 			pos = pos1 + directions[rng.randi() % directions.size()]
@@ -301,8 +311,8 @@ func out_bounds(v: Vector2i) -> bool:
 func generate_tile(pos: Vector2i) -> Tile:
 	var tile := tile_scene.instantiate() as Tile
 	tile.position = pos * 64.0
-	match config.sampling_algorithm:
-		GameConfig.SamplingAlgorithm.NOISE_DIRECT:
+	match config.dot_sampling_mode:
+		GameConfig.DotSamplingMode.NOISE_DIRECT:
 			tile.generated_value = dot_sample2(pos)
 		_:  # NOISE_RETENTION default
 			tile.generated_value = dot_sample1(pos)
@@ -313,10 +323,9 @@ func generate_tile(pos: Vector2i) -> Tile:
 func dot_sample1(pos: Vector2i) -> int:
 	var noise_sample = 0.5 * (dot_noise.get_noise_2d(pos.x, pos.y) + 1.0) # [-1, 1] -> [0, 1]
 	var v := last_value
-	if noise_sample < 0.5:
+	if noise_sample < config.dot_change_threshold:
 		v = rng.randi_range(0, 6)
 	last_value = v
-	# Debug print removed
 	return v
 
 func dot_sample2(pos: Vector2i) -> int:
@@ -376,10 +385,10 @@ func _generate_constraints_async() -> void:
 		if group.size() < grp_min:
 			break
 
-		# Occasionally skip singles
-		if group.size() == 1:
-			if rng.randf() < 0.25:
-				continue
+		# Skip small groups with configured probability
+		if group.size() <= config.constraint_skip_max_size and rng.randf() < config.constraint_skip_prob:
+			print("Game: Skipped constraint group of size %d (skip_prob=%.2f)" % [group.size(), config.constraint_skip_prob])
+			continue
 
 		# Create constraint — pass config so thresholds are applied
 		var c := constraint_scene.instantiate() as Constraint
