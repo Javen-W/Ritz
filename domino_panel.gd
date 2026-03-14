@@ -10,6 +10,8 @@ const DOMINO_SPACING: float = 150.0
 const PANEL_OFFSET_Y: float = -90.0  # World-space Y offset above camera bottom edge
 const PANEL_HEIGHT: float = 160.0
 const CORNER_RADIUS: float = 20.0
+# Reserve screen space for the always-visible GenPanel on the right
+const GEN_PANEL_WIDTH: float = 340.0
 
 var _bg: Polygon2D
 var _last_bg_width: float = 0.0
@@ -61,18 +63,24 @@ func _process(_delta: float) -> void:
 	var camera: Camera2D = game.camera2d
 	var viewport_size := get_viewport().get_visible_rect().size
 
-	# Keep panel anchored to the bottom of the camera view in world space
-	self.position = camera.global_position + Vector2(0.0, viewport_size.y / (2.0 * camera.zoom.y) + PANEL_OFFSET_Y)
+	# Center the panel in the area left of the GenPanel.
+	# In world space: shift left by half the GenPanel's screen width.
+	var gen_offset_world := GEN_PANEL_WIDTH / (2.0 * camera.zoom.x)
+	self.position = camera.global_position + Vector2(
+		-gen_offset_world,
+		viewport_size.y / (2.0 * camera.zoom.y) + PANEL_OFFSET_Y
+	)
 
-	# Update background to 75% of viewport width in world space (only when changed)
-	var w := viewport_size.x / camera.zoom.x * 0.50
+	# Panel width = 75% of the available screen area (viewport minus GenPanel)
+	var avail_screen := viewport_size.x - GEN_PANEL_WIDTH
+	var w := avail_screen / camera.zoom.x * 0.75
 	if not is_equal_approx(w, _last_bg_width):
 		_last_bg_width = w
 		_bg.polygon = _make_rounded_rect_polygon(w, PANEL_HEIGHT, CORNER_RADIUS)
 
 	# Position buttons just outside the right edge of the panel background
 	var panel_screen_y := viewport_size.y + PANEL_OFFSET_Y * camera.zoom.y
-	var panel_right_screen_x := viewport_size.x / 2.0 + _last_bg_width / 2.0 * camera.zoom.x + 8.0
+	var panel_right_screen_x := viewport_size.x / 2.0 - GEN_PANEL_WIDTH / 2.0 + _last_bg_width / 2.0 * camera.zoom.x + 8.0
 	_button_container.position = Vector2(
 		panel_right_screen_x,
 		panel_screen_y - _button_container.size.y / 2.0

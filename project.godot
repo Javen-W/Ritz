@@ -23,6 +23,11 @@ config/icon="res://icon.svg"
 
 GameSignalbus="*res://game_signalbus.gd"
 
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+
 [layer_names]
 
 2d_physics/layer_1="mouse"
