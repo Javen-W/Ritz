@@ -16,7 +16,7 @@ const AUTHOR: String  = "Javen W."
 
 # Background generation settings
 const BG_MAP_SIZE:     int   = 35
-const BG_NUM_DOMINOS:  int   = 20
+const BG_NUM_DOMINOS:  int   = 250
 const BG_TILE_SIZE:    float = 64.0
 
 # Camera pan
@@ -59,7 +59,7 @@ const _directions: Array = [
 func _ready() -> void:
 	# Background world (tiles + constraints rendered by the Node2D camera)
 	_bg_camera = Camera2D.new()
-	_bg_camera.zoom = Vector2(0.5, 0.5)
+	_bg_camera.zoom = Vector2(0.75, 0.75)
 	add_child(_bg_camera)
 
 	_bg_tiles = Node2D.new()
