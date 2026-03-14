@@ -54,6 +54,9 @@ func _ready() -> void:
 	# Generate game.
 	generate_tiles()
 	generate_constraints()
+	print("Game: Generated %d tiles, %d dominos, %d constraints (seed=%d)" % [
+		grid.size(), NUMBER_DOMINOS, constraints.size(), SEED
+	])
 
 func _process(delta: float) -> void:
 	var camera_input = Vector2.ZERO
@@ -102,18 +105,19 @@ func _constrain_camera_position(target_pos: Vector2) -> Vector2:
 # Handle signals
 # --------------------------------------------------------------
 func _on_domino_assigned(domino: Domino) -> void:
-	print("Game: Domino assigned.")
 	if domino.get_parent():
 		domino.get_parent().remove_child(domino)
 	assigned_dominos.add_child(domino)
+	var placed_count := assigned_dominos.get_child_count()
+	print("Game: Domino assigned (%d/%d placed)" % [placed_count, NUMBER_DOMINOS])
 	
 	# Check if all conditions have been met for a game win.
-	var all_conditions_met = validate_win_conditions()
-	print("Game: All conditions met? ", all_conditions_met)
+	var all_conditions_met := validate_win_conditions()
 	if all_conditions_met:
-		# Game won!
-		print("Game: Win!")
+		print("Game: 🎉 All constraints satisfied — you win!")
 		GameSignalbus.emit_game_won()
+	elif placed_count == NUMBER_DOMINOS:
+		print("Game: All dominos placed but constraints not yet satisfied")
 
 func _on_domino_unassigned(domino: Domino) -> void:
 	pass

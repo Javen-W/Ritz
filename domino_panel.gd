@@ -10,47 +10,72 @@ const DOMINO_SPACING: float = 150.0
 const PANEL_OFFSET_Y: float = -90.0  # World-space Y offset above camera bottom edge
 const PANEL_HEIGHT: float = 160.0
 
-var _reset_button: Button
+var _bg: Polygon2D
+var _last_bg_width: float = 0.0
+var _button_container: VBoxContainer
+var _shuffle_pending := false
 
 func _ready() -> void:
-	# Background bar spans the full visible width of the viewport
-	var bg := Polygon2D.new()
-	var w := 3000.0
-	bg.polygon = PackedVector2Array([
-		Vector2(-w / 2.0, -PANEL_HEIGHT / 2.0), Vector2(w / 2.0, -PANEL_HEIGHT / 2.0),
-		Vector2(w / 2.0, PANEL_HEIGHT / 2.0), Vector2(-w / 2.0, PANEL_HEIGHT / 2.0)
-	])
-	bg.color = Color(0.25, 0.25, 0.25, 0.85)
-	bg.z_index = -1
-	add_child(bg)
+	_bg = Polygon2D.new()
+	_bg.color = Color(0.25, 0.25, 0.25, 0.85)
+	_bg.z_index = -1
+	add_child(_bg)
 
-	# Reset button lives in a CanvasLayer so it stays in screen space
+	# Buttons live in a CanvasLayer so they stay in screen space
 	var canvas := CanvasLayer.new()
 	canvas.layer = 10
 	add_child(canvas)
-	_reset_button = Button.new()
-	_reset_button.text = "↺ Reset"
-	canvas.add_child(_reset_button)
-	_reset_button.pressed.connect(_on_reset_button_pressed)
+	_button_container = VBoxContainer.new()
+	_button_container.add_theme_constant_override("separation", 6)
+	canvas.add_child(_button_container)
+
+	var reset_btn := Button.new()
+	reset_btn.text = "↺ Reset"
+	_button_container.add_child(reset_btn)
+	reset_btn.pressed.connect(_on_reset_button_pressed)
+
+	var shuffle_btn := Button.new()
+	shuffle_btn.text = "⇄ Shuffle"
+	_button_container.add_child(shuffle_btn)
+	shuffle_btn.pressed.connect(shuffle_stack)
 
 	GameSignalbus.domino_generated.connect(_on_domino_generated)
 	GameSignalbus.domino_unassigned.connect(_on_domino_unassigned)
 
 func _process(_delta: float) -> void:
-	# Keep panel anchored to the bottom of the camera view in world space
 	var camera: Camera2D = game.camera2d
 	var viewport_size := get_viewport().get_visible_rect().size
+
+	# Keep panel anchored to the bottom of the camera view in world space
 	self.position = camera.global_position + Vector2(0.0, viewport_size.y / (2.0 * camera.zoom.y) + PANEL_OFFSET_Y)
 
-	# Position the reset button to the right of the domino row in screen space
+	# Update background to 75% of viewport width in world space (only when changed)
+	var w := viewport_size.x / camera.zoom.x * 0.75
+	if not is_equal_approx(w, _last_bg_width):
+		_last_bg_width = w
+		_bg.polygon = PackedVector2Array([
+			Vector2(-w / 2.0, -PANEL_HEIGHT / 2.0), Vector2(w / 2.0, -PANEL_HEIGHT / 2.0),
+			Vector2(w / 2.0, PANEL_HEIGHT / 2.0), Vector2(-w / 2.0, PANEL_HEIGHT / 2.0)
+		])
+
+	# Position buttons to the right of the domino row in screen space
 	var panel_screen_y := viewport_size.y + PANEL_OFFSET_Y * camera.zoom.y
-	_reset_button.position = Vector2(
+	_button_container.position = Vector2(
 		viewport_size.x / 2.0 + (VISIBLE_COUNT - 1) / 2.0 * DOMINO_SPACING * camera.zoom.x + 20.0,
-		panel_screen_y - _reset_button.size.y / 2.0
+		panel_screen_y - _button_container.size.y / 2.0
 	)
 
 func _on_domino_generated(domino: Domino) -> void:
 	add_domino_to_stack(domino)
+	# Defer initial shuffle so it runs once after all dominos are added this frame
+	if not _shuffle_pending:
+		_shuffle_pending = true
+		call_deferred("_do_initial_shuffle")
+
+func _do_initial_shuffle() -> void:
+	_shuffle_pending = false
+	shuffle_stack()
+	print("DominoPanel: Initial shuffle complete — %d dominos in stack" % domino_stack.size())
 
 func _on_domino_unassigned(domino: Domino) -> void:
 	add_domino_to_stack(domino)
@@ -62,10 +87,28 @@ func add_domino_to_stack(domino: Domino) -> void:
 		add_child(domino)
 		domino_stack.append(domino)
 		domino.is_from_panel = true
+		print("DominoPanel: Added domino — stack size now %d" % domino_stack.size())
 
 	_layout_dominos()
 	# Compute the expected slot position directly so picked dominos get the right origin
 	domino.panel_origin_position = _slot_local_position(domino_stack.find(domino))
+
+func shuffle_stack() -> void:
+	if domino_stack.is_empty():
+		return
+	var rng := RandomNumberGenerator.new()
+	rng.randomize()
+	for i in range(domino_stack.size() - 1, 0, -1):
+		var j := rng.randi_range(0, i)
+		var tmp := domino_stack[i]
+		domino_stack[i] = domino_stack[j]
+		domino_stack[j] = tmp
+	current_index = 0
+	# Reset all panel dominos to vertical orientation after shuffle
+	for domino in domino_stack:
+		domino.rotation = -PI / 2.0
+	_layout_dominos()
+	print("DominoPanel: Shuffled stack (%d dominos)" % domino_stack.size())
 
 func shuffle_to_next() -> void:
 	if domino_stack.is_empty():
@@ -93,7 +136,6 @@ func _layout_dominos() -> void:
 		if domino.is_picked:
 			continue
 
-		# Wrap-safe modulo so negative indices work correctly
 		var slot := ((i - current_index) % n + n) % n
 
 		if slot < VISIBLE_COUNT:
@@ -107,6 +149,7 @@ func _layout_dominos() -> void:
 func remove_domino_from_stack(domino: Domino) -> void:
 	if domino_stack.has(domino):
 		domino_stack.erase(domino)
+		print("DominoPanel: Removed domino — stack size now %d" % domino_stack.size())
 		_layout_dominos()
 
 func reset_all_dominos() -> void:
@@ -125,6 +168,7 @@ func reset_all_dominos() -> void:
 		domino.is_placed = false
 		domino.is_from_panel = true
 		add_domino_to_stack(domino)
+	print("DominoPanel: Reset %d placed dominos back to panel" % to_reset.size())
 
 func _on_reset_button_pressed() -> void:
 	reset_all_dominos()

@@ -11,7 +11,6 @@ func place_dots(v: int) -> bool:
 		return false
 	self.dots_value = v
 	dots_placed.emit()
-	print("Tile place_dots(): ", self.dots_value, " ", self.name)
 	return true
 
 func remove_dots() -> void:

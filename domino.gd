@@ -126,9 +126,12 @@ func _on_domino_picked() -> void:
 	if is_placed:
 		is_placed = false
 		is_from_panel = true
+		print("Domino: Unassigned from board [%d|%d]" % [dots1_value, dots2_value])
 		var panel := get_tree().root.get_node_or_null("Game/DominoPanel") as DominoPanel
 		if panel:
 			panel.add_domino_to_stack(self)
+	else:
+		print("Domino: Picked from panel [%d|%d]" % [dots1_value, dots2_value])
 
 	if self.tile1 != null:
 		self.tile1.remove_dots()
@@ -216,21 +219,23 @@ func _on_domino_released() -> void:
 	
 	# Signal global bus.
 	GameSignalbus.emit_domino_assigned(self)
-	
-	# Debug.
-	if self.tile1 and self.tile2:
-		print("Domino placement successful: ", self.tile1.global_position.snappedf(64.0) / 64.0, " ", self.tile2.global_position.snappedf(64.0) / 64.0)
+	print("Domino: Placed [%d|%d] at tiles %s / %s" % [
+		dots1_value, dots2_value,
+		str(self.tile1.global_position / 64.0) if self.tile1 else "?",
+		str(self.tile2.global_position / 64.0) if self.tile2 else "?"
+	])
 
 func _return_to_panel() -> void:
 	if not is_from_panel:
 		return
-	
+
 	entered_tile1s.clear()
 	entered_tile2s.clear()
 	is_placed = false
-	
-	# Dominoes are already in the game tree, just restore position
+
+	# Restore to saved panel-local slot position
 	self.position = panel_origin_position
+	print("Domino: Returned to panel [%d|%d]" % [dots1_value, dots2_value])
 	GameSignalbus.emit_domino_unassigned(self)
 
 func _on_domino_selected(domino: Domino) -> void:
