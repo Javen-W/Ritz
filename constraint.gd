@@ -64,7 +64,7 @@ func generate(rng: RandomNumberGenerator, cfg: GameConfig = null) -> void:
 		group_sum += t.generated_value
 
 	# Determine constraint type (evaluated in priority order)
-	if group.size() > 1 and rng.randf() < p_equal:
+	if group.size() > 1 and is_group_equal(true) and rng.randf() < p_equal:
 		type = Constraint.Type.EQUAL
 	elif group.size() > 1 and is_group_notequal(true) and rng.randf() < p_neq:
 		type = Constraint.Type.NOT_EQUAL
