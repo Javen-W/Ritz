@@ -14,22 +14,23 @@ signal domino_picked
 @onready var background : MeshInstance2D = $Background
 @onready var shader_material : ShaderMaterial = background.material as ShaderMaterial
 @onready var mouse_collision : CollisionShape2D = $MouseArea2D/CollisionShape2D
-@onready var dots1_collision : CollisionShape2D = $Dots1Area2D/CollisionShape2D
-@onready var dots2_collision : CollisionShape2D = $Dots2Area2D/CollisionShape2D
 
 static var selected_domino : Domino = null
 
 var is_picked : bool = false
-var entered_tile1s : Array[Tile] = []
-var entered_tile2s : Array[Tile] = []
 var is_from_panel : bool = false
 var panel_origin_position : Vector2 = Vector2.ZERO
-var panel_origin_parent: Node = null
 var is_placed : bool = false
 
 var _mouse_pressed: bool = false
 var _press_world_pos: Vector2 = Vector2.ZERO
 const DRAG_THRESHOLD_SQ: float = 64.0  # 8 px radius before drag begins
+
+# Assignment: search whole grid within this world-space radius of the domino centre.
+const ASSIGN_SEARCH_RADIUS: float = 96.0
+# Extra distance cost added per 90° of rotation needed to match a candidate pair.
+# Keeps same-axis pairs preferred when they are within this many px further away.
+const ASSIGN_ORIENT_PENALTY: float = 32.0
 
 func _ready() -> void:
 	update_pips()
@@ -77,8 +78,7 @@ func _on_mouse_area_2d_input_event(viewport: Node, event: InputEvent, shape_idx:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.double_click:
 			_mouse_pressed = false  # cancel any pending drag from the first click
-			if not is_placed:
-				rotate_once()
+			rotate_once()           # cosmetic; tile assignments are unaffected
 		elif event.is_pressed():
 			if Domino.selected_domino == self:
 				_mouse_pressed = true
@@ -86,71 +86,99 @@ func _on_mouse_area_2d_input_event(viewport: Node, event: InputEvent, shape_idx:
 				if is_from_panel:
 					panel_origin_position = self.position
 
-func _on_dots_1_area_2d_area_entered(area: Area2D) -> void:
-	var tile = area.owner as Tile
-	if !entered_tile1s.has(tile):
-		entered_tile1s.append(tile)
-		# print("Domino dots1 area entered: ", tile)
+func _on_dots_1_area_2d_area_entered(_area: Area2D) -> void: pass
+func _on_dots_1_area_2d_area_exited(_area: Area2D) -> void: pass
+func _on_dots_2_area_2d_area_entered(_area: Area2D) -> void: pass
+func _on_dots_2_area_2d_area_exited(_area: Area2D) -> void: pass
 
-func _on_dots_2_area_2d_area_entered(area: Area2D) -> void:
-	var tile = area.owner as Tile
-	if !entered_tile2s.has(tile):
-		entered_tile2s.append(tile)
-		# print("Domino dots2 area entered: ", tile)
+# Search the whole game grid for the nearest valid adjacent empty tile pair.
+# Scores by distance to pair centre + orientation mismatch penalty.
+# Correctly handles 180° assignment (rot=0 vs rot=PI, rot=PI/2 vs rot=-PI/2).
+func _try_assign_to_nearest_tiles() -> bool:
+	var game := get_tree().root.get_node("Game") as Game
+	if not game:
+		return false
 
-func _on_dots_1_area_2d_area_exited(area: Area2D) -> void:
-	var tile = area.owner as Tile
-	# call_deferred("_erase_entered_tile1", tile)
-	_erase_entered_tile1(tile)
+	var domino_center := self.global_position
+	var current_rot  := self.rotation
 
-func _on_dots_2_area_2d_area_exited(area: Area2D) -> void:
-	var tile = area.owner as Tile
-	# call_deferred("_erase_entered_tile2", tile)
-	_erase_entered_tile2(tile)
+	var best_t1: Tile  = null
+	var best_t2: Tile  = null
+	var best_rot: float = 0.0
+	var best_score     := INF
 
-func _erase_entered_tile2(tile: Tile) -> void:
-	entered_tile2s.erase(tile)
-	if self.tile2 == tile and not is_placed:
-		self.tile2.remove_dots()
-		self.tile2 = null
-
-func _erase_entered_tile1(tile: Tile) -> void:
-	entered_tile1s.erase(tile)
-	if self.tile1 == tile and not is_placed:
-		self.tile1.remove_dots()
-		self.tile1 = null
-
-func _find_best_tile_pair() -> Array[Tile]:
-	# Union of both overlap lists so we consider all nearby tiles regardless of which
-	# dots area detected them — covers slightly off-center and perpendicular drops.
-	var candidates: Array[Tile] = entered_tile1s.duplicate()
-	for t in entered_tile2s:
-		if not candidates.has(t):
-			candidates.append(t)
-
-	var best_pair: Array[Tile] = []
-	var best_score := INF
-	for i in candidates.size():
-		var ta := candidates[i]
-		if ta.dots_value != -1:
-			continue
-		for j in candidates.size():
-			if i == j:
+	for raw_pos in game.grid.keys():
+		var gpos := raw_pos as Vector2i
+		# Only check right (+x) and down (+y) neighbours — avoids duplicate pairs.
+		for dir in [Vector2i(1, 0), Vector2i(0, 1)]:
+			var gpos2 := gpos + dir
+			if not game.grid.has(gpos2):
 				continue
-			var tb := candidates[j]
-			if tb.dots_value != -1:
+			var ta: Tile = game.grid[gpos]
+			var tb: Tile = game.grid[gpos2]
+			if ta.dots_value != -1 or tb.dots_value != -1:
+				continue  # already occupied
+
+			var pair_center := (ta.position + tb.position) * 0.5
+			var dist := domino_center.distance_to(pair_center)
+			if dist > ASSIGN_SEARCH_RADIUS:
 				continue
-			# Accept only grid-adjacent tiles (use tolerance against float rounding)
-			if absf(ta.position.distance_to(tb.position) - 64.0) > 0.5:
-				continue
-			# Score: sum of distances from each dots area to its candidate tile.
-			# Lower score = better alignment with the domino's current orientation.
-			var score := (dots1_collision.global_position.distance_to(ta.global_position)
-						+ dots2_collision.global_position.distance_to(tb.global_position))
-			if score < best_score:
-				best_score = score
-				best_pair = [ta, tb]
-	return best_pair
+
+			# Two ordered assignments per pair, each implying a distinct rotation:
+			#   Horizontal (dir=(1,0)):  ta=LEFT,  tb=RIGHT
+			#     rot= 0   → dots1 points LEFT  → ta receives dots1_value
+			#     rot= PI  → dots1 points RIGHT → tb receives dots1_value
+			#   Vertical   (dir=(0,1)):  ta=TOP,   tb=BOTTOM
+			#     rot= PI/2  → dots1 points UP   → ta receives dots1_value
+			#     rot=-PI/2  → dots1 points DOWN → tb receives dots1_value
+			var options: Array
+			if dir == Vector2i(1, 0):
+				options = [[ta, tb, 0.0], [tb, ta, PI]]
+			else:
+				options = [[ta, tb, PI/2.0], [tb, ta, -PI/2.0]]
+
+			for opt in options:
+				var req_rot: float = opt[2]
+				# angle_difference returns the shortest signed delta in (-PI, PI]
+				var rot_delta := absf(angle_difference(current_rot, req_rot))
+				# Score: distance is primary; orientation mismatch adds a small penalty
+				# (one 90° step costs ASSIGN_ORIENT_PENALTY px of "virtual distance")
+				var score := dist + rot_delta / (PI / 2.0) * ASSIGN_ORIENT_PENALTY
+				if score < best_score:
+					best_score = score
+					best_t1    = opt[0]
+					best_t2    = opt[1]
+					best_rot   = req_rot
+
+	if best_t1 == null:
+		print("Domino: No valid tile pair within %.0fpx" % ASSIGN_SEARCH_RADIUS)
+		return false
+
+	# Snap position and orientation
+	update_position_to_tiles(best_t1, best_t2, Vector2.ZERO)
+	self.rotation = best_rot
+
+	self.tile1 = best_t1
+	self.tile1.place_dots(self.dots1_value)
+	self.tile2 = best_t2
+	self.tile2.place_dots(self.dots2_value)
+
+	is_placed    = true
+	self.scale   = Vector2.ONE
+	self.z_index = 3
+	is_from_panel = false
+
+	var panel := get_tree().root.get_node("Game/DominoPanel") as DominoPanel
+	if panel:
+		panel.remove_domino_from_stack(self)
+
+	GameSignalbus.emit_domino_assigned(self)
+	print("Domino: Placed [%d|%d] → %s / %s (rot=%.0f°)" % [
+		dots1_value, dots2_value,
+		str(best_t1.position / 64.0), str(best_t2.position / 64.0),
+		rad_to_deg(best_rot)
+	])
+	return true
 
 func _on_domino_picked() -> void:
 	is_picked = true
@@ -176,61 +204,14 @@ func _on_domino_picked() -> void:
 
 func _on_domino_released() -> void:
 	is_picked = false
-
-	var pair := _find_best_tile_pair()
-	if pair.is_empty():
+	if not _try_assign_to_nearest_tiles():
 		if is_from_panel:
 			_return_to_panel()
-		return
-
-	var t1 := pair[0]  # receives dots1_value
-	var t2 := pair[1]  # receives dots2_value
-
-	# Snap domino position to the center of the tile pair
-	if not update_position_to_tiles(t1, t2, Vector2.ZERO):
-		if is_from_panel:
-			_return_to_panel()
-		return
-
-	# Force rotation to match the tile pair axis so domino always looks correct
-	var pair_dx := absf(t1.position.x - t2.position.x)
-	var pair_dy := absf(t1.position.y - t2.position.y)
-	self.rotation = -PI/2 if pair_dy > pair_dx else 0.0
-
-	# Clear overlap lists BEFORE placing dots to prevent area_exited from undoing placement
-	entered_tile1s.clear()
-	entered_tile2s.clear()
-
-	self.tile1 = t1
-	self.tile1.place_dots(self.dots1_value)
-	self.tile2 = t2
-	self.tile2.place_dots(self.dots2_value)
-
-	is_placed = true
-	self.scale = Vector2.ONE
-	self.z_index = 3
-	is_from_panel = false
-
-	var panel := get_tree().root.get_node("Game/DominoPanel") as DominoPanel
-	if panel:
-		panel.remove_domino_from_stack(self)
-
-	GameSignalbus.emit_domino_assigned(self)
-	print("Domino: Placed [%d|%d] at tiles %s / %s" % [
-		dots1_value, dots2_value,
-		str(self.tile1.global_position / 64.0) if self.tile1 else "?",
-		str(self.tile2.global_position / 64.0) if self.tile2 else "?"
-	])
 
 func _return_to_panel() -> void:
 	if not is_from_panel:
 		return
-
-	entered_tile1s.clear()
-	entered_tile2s.clear()
 	is_placed = false
-
-	# Restore to saved panel-local slot position
 	self.position = panel_origin_position
 	print("Domino: Returned to panel [%d|%d]" % [dots1_value, dots2_value])
 	GameSignalbus.emit_domino_unassigned(self)
