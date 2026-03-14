@@ -1,8 +1,9 @@
 extends RefCounted
 class_name GameConfig
 
-## Selects the algorithm used to assign dot values to tiles during generation.
-enum DotSamplingMode { NOISE_RETENTION, NOISE_DIRECT }
+## Selects the algorithm used to sample a NEW dot value (used when the equal-tile
+## roll fails).  DOT_SAMPLE_1 = pure random; DOT_SAMPLE_2 = noise-mapped.
+enum DotSamplingAlgorithm { DOT_SAMPLE_1, DOT_SAMPLE_2 }
 
 # ── Core ──────────────────────────────────────────────────────────────────────
 var seed: int = 777
@@ -11,20 +12,22 @@ var number_dominos: int = 10
 
 # ── Tile path generation ──────────────────────────────────────────────────────
 ## Probability that the snake path branches from pos2 rather than pos1 each step.
-## 0 = always extend from pos1 (straighter), 1 = always extend from pos2 (curvier).
 var tile_path_branch_prob: float = 0.5
 
 # ── Dot-value sampling ────────────────────────────────────────────────────────
-var dot_sampling_mode: int = DotSamplingMode.NOISE_RETENTION
+var dot_sampling_algorithm: int = DotSamplingAlgorithm.DOT_SAMPLE_1
 
-## NOISE_RETENTION only: noise values below this threshold trigger a new random
-## dot value; above it the previous value is retained.  Lower = more retention
-## (more equal adjacent tiles); higher = more variety.
-var dot_change_threshold: float = 0.5
+## Probability that a tile retains the previous tile's dot value (equal adjacent
+## tiles).  Applied independently via rng.randf() before the sampling algorithm.
+var p_equal_tile: float = 0.5
 
 # ── FastNoiseLite parameters ──────────────────────────────────────────────────
-var noise_frequency: float = 0.05
-var noise_octaves: int = 3
+var noise_type: int          = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
+var noise_frequency: float   = 0.05
+var noise_octaves: int       = 3
+var fractal_type: int        = FastNoiseLite.FRACTAL_FBM
+var fractal_lacunarity: float = 2.0
+var fractal_gain: float      = 0.5
 
 # ── Constraint group sizing (normal distribution, then clamped) ───────────────
 var constraint_group_mean: float = 2.5

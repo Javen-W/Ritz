@@ -43,17 +43,12 @@ var current_state: GameState = GameState.GENERATING
 var elapsed_time: float = 0.0
 
 func _ready() -> void:
-	# Build default config from export vars so existing inspector overrides are honoured
+	# Use GameConfig defaults so the initial game matches a fresh regenerate()
 	config = GameConfig.new()
-	config.seed = SEED
-	config.map_size = MAP_SIZE
-	config.number_dominos = NUMBER_DOMINOS
-	config.noise_frequency = dot_noise.frequency
-	config.noise_octaves = dot_noise.fractal_octaves
 	_apply_config(config)
 
 	# Position camera at board center; refined to tile centroid after generation
-	var board_center = Vector2(MAP_SIZE / 2.0, MAP_SIZE / 2.0) * 64.0
+	var board_center = Vector2(config.map_size / 2.0, config.map_size / 2.0) * 64.0
 	camera2d.global_position = board_center
 	camera_center = camera2d.global_position
 
@@ -90,10 +85,17 @@ func _apply_config(cfg: GameConfig) -> void:
 	MAP_SIZE       = cfg.map_size
 	NUMBER_DOMINOS = cfg.number_dominos
 	rng.seed       = hash(cfg.seed)
-	dot_noise.frequency      = cfg.noise_frequency
+	dot_noise.noise_type      = cfg.noise_type
+	dot_noise.frequency       = cfg.noise_frequency
 	dot_noise.fractal_octaves = cfg.noise_octaves
+	dot_noise.fractal_type    = cfg.fractal_type
+	dot_noise.fractal_lacunarity = cfg.fractal_lacunarity
+	dot_noise.fractal_gain    = cfg.fractal_gain
 	dot_noise.seed = rng.seed
 	last_value = 0
+	print("Game: Config applied — seed=%d, map=%d, dominos=%d, algo=%d, p_equal_tile=%.2f" % [
+		cfg.seed, cfg.map_size, cfg.number_dominos, cfg.dot_sampling_algorithm, cfg.p_equal_tile
+	])
 
 func regenerate(new_config: GameConfig) -> void:
 	if current_state == GameState.GENERATING:
@@ -311,28 +313,27 @@ func out_bounds(v: Vector2i) -> bool:
 func generate_tile(pos: Vector2i) -> Tile:
 	var tile := tile_scene.instantiate() as Tile
 	tile.position = pos * 64.0
-	match config.dot_sampling_mode:
-		GameConfig.DotSamplingMode.NOISE_DIRECT:
-			tile.generated_value = dot_sample2(pos)
-		_:  # NOISE_RETENTION default
-			tile.generated_value = dot_sample1(pos)
+
+	# Equal-tile retention: independent of the sampling algorithm
+	if rng.randf() < config.p_equal_tile:
+		tile.generated_value = last_value
+	else:
+		# Sample a new value via the chosen algorithm
+		match config.dot_sampling_algorithm:
+			GameConfig.DotSamplingAlgorithm.DOT_SAMPLE_2:
+				tile.generated_value = _dot_sample_noise(pos)
+			_:  # DOT_SAMPLE_1: pure random
+				tile.generated_value = rng.randi_range(0, 6)
+		last_value = tile.generated_value
+
 	tile_nodes.add_child(tile)
 	grid[pos] = tile
 	return tile
 
-func dot_sample1(pos: Vector2i) -> int:
-	var noise_sample = 0.5 * (dot_noise.get_noise_2d(pos.x, pos.y) + 1.0) # [-1, 1] -> [0, 1]
-	var v := last_value
-	if noise_sample < config.dot_change_threshold:
-		v = rng.randi_range(0, 6)
-	last_value = v
-	return v
-
-func dot_sample2(pos: Vector2i) -> int:
-	var noise_sample = 3.5 * (dot_noise.get_noise_2d(pos.x, pos.y) + 1.0) # [-1, 1] -> [0, 7]
-	var v = floori(clampf(noise_sample, 0, 6))
-	# Debug print removed
-	return v
+## DOT_SAMPLE_2: map noise value directly onto 0–6.
+func _dot_sample_noise(pos: Vector2i) -> int:
+	var n := 3.5 * (dot_noise.get_noise_2d(pos.x, pos.y) + 1.0) # [-1,1] → [0,7]
+	return floori(clampf(n, 0, 6))
 
 # --------------------------------------------------------------
 # Generate domino
