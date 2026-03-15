@@ -91,7 +91,6 @@ func _set_state(state: GameState) -> void:
 			GameSignalbus.interaction_blocked = true
 		GameState.ACTIVE:
 			GameSignalbus.interaction_blocked = false
-			elapsed_time = 0.0
 		GameState.FINISHED:
 			GameSignalbus.interaction_blocked = true
 	GameSignalbus.emit_game_state_changed(state)

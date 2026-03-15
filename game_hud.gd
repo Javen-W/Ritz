@@ -22,13 +22,13 @@ const SUCCESS_COLOR := Color(0.2, 0.95, 0.3, 1.0)
 var _spinner_idx: int = 0
 var _spinner_time: float = 0.0
 
-# Internal elapsed time (tracks Active state duration for display)
-var _elapsed: float = 0.0
-var _is_timing: bool = false
+# Reference to the parent Game node — single source of truth for elapsed_time.
+var _game: Game
 
 
 func _ready() -> void:
 	layer = HUD_LAYER
+	_game = get_parent() as Game
 	_build_loading_overlay()
 	_build_timer_display()
 	_build_win_popup()
@@ -166,16 +166,15 @@ func _process(delta: float) -> void:
 			_spinner_idx = (_spinner_idx + 1) % SPINNER_CHARS.size()
 			_loading_title.text = SPINNER_CHARS[_spinner_idx] + "  Generating game..."
 
-	# Advance internal timer during the Active state
-	if _is_timing:
-		_elapsed += delta
-		_refresh_timer_label()
+	# Refresh the timer label from Game.elapsed_time (single source of truth)
+	if _timer_label.visible and _game != null:
+		_refresh_timer_label(_game.elapsed_time)
 
 # --------------------------------------------------------------
 # Helpers
 # --------------------------------------------------------------
-func _refresh_timer_label() -> void:
-	var total_secs := int(_elapsed)
+func _refresh_timer_label(t: float) -> void:
+	var total_secs := int(t)
 	var mins := total_secs / 60
 	var secs := total_secs % 60
 	_timer_label.text = "%02d:%02d" % [mins, secs]
@@ -189,19 +188,14 @@ func _on_game_state_changed(state: int) -> void:
 			_loading_overlay.visible = true
 			_timer_label.visible = false
 			_win_overlay.visible = false
-			_is_timing = false
-			_elapsed = 0.0
 
 		Game.GameState.ACTIVE:
 			_loading_overlay.visible = false
 			_timer_label.visible = true
 			_timer_label.add_theme_color_override("font_color", Color.WHITE)
 			_win_overlay.visible = false
-			_is_timing = true
-			_elapsed = 0.0
 
 		Game.GameState.FINISHED:
-			_is_timing = false
 			_loading_overlay.visible = false
 			_timer_label.visible = true
 			_timer_label.add_theme_color_override("font_color", SUCCESS_COLOR)
@@ -213,9 +207,10 @@ func _on_generation_update(message: String) -> void:
 		_loading_status.text = message
 
 func _on_game_won() -> void:
-	# Freeze the final timer value and display the win popup.
-	_refresh_timer_label()
-	var total_secs := int(_elapsed)
+	# Display final time from Game.elapsed_time (frozen once state → FINISHED).
+	var t := _game.elapsed_time if _game != null else 0.0
+	_refresh_timer_label(t)
+	var total_secs := int(t)
 	var mins := total_secs / 60
 	var secs := total_secs % 60
 	_win_message_label.text = "Completed in %02d:%02d" % [mins, secs]
