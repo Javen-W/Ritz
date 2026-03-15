@@ -1,7 +1,11 @@
 extends Node
 
 const SAVE_PATH    := "user://save_state.json"
+const OPTIONS_PATH := "user://options.json"
 const APP_VERSION  := "1.0"
+
+# Available resolutions — single source of truth; OptionsMenu references SaveManager.RESOLUTIONS.
+const RESOLUTIONS: Array = [[1280, 720], [1600, 900], [1920, 1080], [2560, 1440]]
 
 var has_save: bool = false
 
@@ -9,6 +13,7 @@ var has_save: bool = false
 func _ready() -> void:
 	has_save = FileAccess.file_exists(SAVE_PATH)
 	print("SaveManager: has_save=%s" % str(has_save))
+	_apply_saved_display_settings()
 
 
 func save_state(config: GameConfig, placements: Array, elapsed_time: float = 0.0) -> void:
@@ -144,3 +149,63 @@ func _dict_to_config(d: Dictionary) -> GameConfig:
 	cfg.prob_less_than         = float(d.get("prob_less_than",         0.10))
 	cfg.prob_greater_than      = float(d.get("prob_greater_than",      0.10))
 	return cfg
+
+
+# ── Options persistence ───────────────────────────────────────────────────────
+
+func save_options(opts: Dictionary) -> void:
+	var file := FileAccess.open(OPTIONS_PATH, FileAccess.WRITE)
+	if file:
+		file.store_string(JSON.stringify(opts))
+		file.close()
+	else:
+		push_error("SaveManager: Failed to write options file (error %d)" % FileAccess.get_open_error())
+
+
+func load_options() -> Dictionary:
+	if not FileAccess.file_exists(OPTIONS_PATH):
+		return {}
+	var file := FileAccess.open(OPTIONS_PATH, FileAccess.READ)
+	if not file:
+		return {}
+	var text := file.get_as_text()
+	file.close()
+	var result = JSON.parse_string(text)
+	if result == null or not result is Dictionary:
+		return {}
+	return result as Dictionary
+
+
+## Apply saved display / render settings early (called from _ready).
+## Audio settings are applied by MusicManager which runs immediately after.
+func _apply_saved_display_settings() -> void:
+	var opts := load_options()
+	if opts.is_empty():
+		return
+	# Fullscreen
+	if bool(opts.get("fullscreen", false)):
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+	# VSync
+	var vsync_mode := DisplayServer.VSYNC_ENABLED if bool(opts.get("vsync", true)) else DisplayServer.VSYNC_DISABLED
+	DisplayServer.window_set_vsync_mode(vsync_mode)
+	# Resolution (only in windowed mode)
+	if not bool(opts.get("fullscreen", false)):
+		var res_idx := int(opts.get("resolution_idx", 0))
+		if res_idx >= 0 and res_idx < RESOLUTIONS.size():
+			var res: Array = RESOLUTIONS[res_idx]
+			DisplayServer.window_set_size(Vector2i(res[0], res[1]))
+	# MSAA — deferred so the root viewport is fully initialized
+	var msaa_idx := int(opts.get("msaa", 0))
+	call_deferred("_apply_msaa", msaa_idx)
+
+
+func _apply_msaa(idx: int) -> void:
+	var levels := [
+		Viewport.MSAA_DISABLED,
+		Viewport.MSAA_2X,
+		Viewport.MSAA_4X,
+		Viewport.MSAA_8X,
+	]
+	if idx >= 0 and idx < levels.size():
+		get_viewport().msaa_2d = levels[idx]
+		print("SaveManager: MSAA restored → index %d" % idx)

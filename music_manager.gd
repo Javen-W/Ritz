@@ -27,9 +27,18 @@ const BGM_FREQ_C: float = 130.81  # C3 (gentle minor third)
 
 
 func _ready() -> void:
+	# Restore saved audio volumes before setting up players.
+	var opts := SaveManager.load_options()
+	if opts.has("bgm_volume_db"):
+		bgm_volume_db = float(opts["bgm_volume_db"])
+	if opts.has("sfx_volume_db"):
+		sfx_volume_db = float(opts["sfx_volume_db"])
 	_setup_bgm()
 	_setup_sfx()
 	play_bgm()
+	# Apply master volume (AudioServer persists within a session but not across restarts).
+	if opts.has("master_volume_db"):
+		AudioServer.set_bus_volume_db(AudioServer.get_bus_index("Master"), float(opts["master_volume_db"]))
 
 
 func _setup_bgm() -> void:
