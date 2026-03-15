@@ -44,6 +44,8 @@ var elapsed_time: float = 0.0
 
 # Pending domino placements to restore after generation (loaded from save)
 var _pending_restore: Array = []
+# When true, skips per-tile/constraint frame-delays for instant generation.
+var _instant_gen: bool = false
 
 func _ready() -> void:
 	# Load from save state if one exists, otherwise use defaults
@@ -52,6 +54,7 @@ func _ready() -> void:
 		if saved_cfg != null:
 			config = saved_cfg
 			_pending_restore = SaveManager.load_placements()
+			_instant_gen = not _pending_restore.is_empty()
 			print("Game: Loaded config from save (seed=%d, %d placements)" % [config.seed, _pending_restore.size()])
 		else:
 			config = GameConfig.new()
@@ -118,6 +121,7 @@ func regenerate(new_config: GameConfig) -> void:
 	GameSignalbus.emit_generation_update("Clearing previous game...")
 	_apply_config(new_config)
 	_pending_restore = []  # fresh regeneration — no placements to restore
+	_instant_gen = false
 	_clear_game()
 	var board_center := Vector2(MAP_SIZE / 2.0, MAP_SIZE / 2.0) * 64.0
 	camera2d.global_position = board_center
@@ -205,6 +209,11 @@ func _process(delta: float) -> void:
 	if current_state == GameState.ACTIVE:
 		elapsed_time += delta
 	
+	# Escape: return to main menu (only when the game is not generating)
+	if current_state != GameState.GENERATING and Input.is_action_just_pressed("ui_cancel"):
+		get_tree().change_scene_to_file("res://main_menu.tscn")
+		return
+	
 	var camera_input = Vector2.ZERO
 
 	# Don't pan camera while a UI control (e.g. a gen-panel spinbox) has keyboard focus
@@ -231,6 +240,18 @@ func _process(delta: float) -> void:
 	# Reset camera on space
 	if Input.is_action_just_pressed("ui_select"):
 		camera2d.global_position = camera_center
+
+
+## Release keyboard focus from any focused UI control (e.g. a SpinBox LineEdit)
+## when the user clicks on the game world, so arrow keys pan the camera again.
+func _unhandled_input(event: InputEvent) -> void:
+	if not (event is InputEventMouseButton):
+		return
+	if event.button_index != MOUSE_BUTTON_LEFT or not event.is_pressed():
+		return
+	var focus := get_viewport().gui_get_focus_owner()
+	if focus:
+		focus.release_focus()
 
 func _constrain_camera_position(target_pos: Vector2) -> Vector2:
 	var board_size = MAP_SIZE * 64.0
@@ -327,7 +348,9 @@ func _generate_tiles_async() -> void:
 			"Generated domino %d / %d..." % [domino_count, NUMBER_DOMINOS]
 		)
 		# Yield a frame so the overlay updates and tiles become visible incrementally.
-		await get_tree().process_frame
+		# Skip when restoring from save for instant (non-animated) generation.
+		if not _instant_gen:
+			await get_tree().process_frame
 		
 		# Update next position
 		if rng.randf() < config.tile_path_branch_prob:
@@ -436,7 +459,8 @@ func _generate_constraints_async() -> void:
 		GameSignalbus.emit_generation_update(
 			"Generated constraint %d (%d tiles remaining)..." % [constraint_count, remaining_tiles.size()]
 		)
-		await get_tree().process_frame
+		if not _instant_gen:
+			await get_tree().process_frame
 
 func shuffle_array(a: Array) -> Array:
 	var t = a.duplicate()
@@ -461,8 +485,11 @@ func _get_current_placements() -> Array:
 		var t1_pos := Vector2i(roundi(domino.tile1.position.x / 64.0), roundi(domino.tile1.position.y / 64.0))
 		var t2_pos := Vector2i(roundi(domino.tile2.position.x / 64.0), roundi(domino.tile2.position.y / 64.0))
 		placements.append({
-			"dots1":   domino.dots1_value,
-			"dots2":   domino.dots2_value,
+			# Save the actual value displayed on each tile, not domino.dots1/2_value,
+			# so that 180° flips (which swap tile1/tile2 but not the dot fields) are
+			# recorded correctly.
+			"dots1":   domino.tile1.dots_value,
+			"dots2":   domino.tile2.dots_value,
 			"tile1_x": t1_pos.x,
 			"tile1_y": t1_pos.y,
 			"tile2_x": t2_pos.x,
@@ -505,6 +532,9 @@ func _restore_placements(placements: Array) -> void:
 		if found == null:
 			continue
 		# Place the domino
+		found.visible = true
+		found.scale   = Vector2.ONE
+		found.z_index = 3
 		found.tile1 = tile1
 		found.tile2 = tile2
 		tile1.place_dots(found.dots1_value)
