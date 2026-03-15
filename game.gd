@@ -44,6 +44,8 @@ var elapsed_time: float = 0.0
 
 # Pending domino placements to restore after generation (loaded from save)
 var _pending_restore: Array = []
+# Elapsed time loaded from save to restore after generation.
+var _pending_elapsed: float = 0.0
 # When true, skips per-tile/constraint frame-delays for instant generation.
 var _instant_gen: bool = false
 
@@ -54,10 +56,11 @@ func _ready() -> void:
 		if saved_cfg != null:
 			config = saved_cfg
 			_pending_restore = SaveManager.load_placements()
+			_pending_elapsed = SaveManager.load_elapsed_time()
 			# Always use instant generation when resuming from any save state,
 			# even if no dominoes were placed yet (placements list is empty).
 			_instant_gen = true
-			print("Game: Loaded config from save (seed=%d, %d placements)" % [config.seed, _pending_restore.size()])
+			print("Game: Loaded config from save (seed=%d, %d placements, elapsed=%.1fs)" % [config.seed, _pending_restore.size(), _pending_elapsed])
 		else:
 			config = GameConfig.new()
 	else:
@@ -193,13 +196,17 @@ func _generate_game_async() -> void:
 	print("Game: Generated %d tiles, %d dominos, %d constraints (seed=%d)" % [
 		grid.size(), NUMBER_DOMINOS, constraints.size(), SEED
 	])
-	# Persist the configuration (placements are empty at this point)
-	SaveManager.save_state(config, [])
+	# Persist the configuration (placements are empty at this point;
+	# use _pending_elapsed so the saved timer is correct for resumed sessions).
+	SaveManager.save_state(config, [], _pending_elapsed)
 	# Apply config to the GenPanel so its controls reflect the loaded/current config
 	var gen_panel := $GenPanel as GenPanel
 	if gen_panel:
 		gen_panel.apply_config(config)
 	_set_state(GameState.ACTIVE)
+	# Restore the elapsed timer from a previous session (overrides the 0.0 set by _set_state).
+	elapsed_time = _pending_elapsed
+	_pending_elapsed = 0.0
 	# Restore saved placements (if any) after the panel's initial shuffle is done
 	if not _pending_restore.is_empty():
 		await get_tree().process_frame
@@ -214,6 +221,7 @@ func _process(delta: float) -> void:
 	
 	# Escape: return to main menu (only when the game is not generating)
 	if current_state != GameState.GENERATING and Input.is_action_just_pressed("ui_cancel"):
+		_auto_save()
 		get_tree().change_scene_to_file("res://main_menu.tscn")
 		return
 	
@@ -481,7 +489,7 @@ func shuffle_array(a: Array) -> Array:
 # Save / restore helpers
 # --------------------------------------------------------------
 func _auto_save() -> void:
-	SaveManager.save_state(config, _get_current_placements())
+	SaveManager.save_state(config, _get_current_placements(), elapsed_time)
 
 func _get_current_placements() -> Array:
 	var placements := []

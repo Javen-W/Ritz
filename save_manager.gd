@@ -11,11 +11,12 @@ func _ready() -> void:
 	print("SaveManager: has_save=%s" % str(has_save))
 
 
-func save_state(config: GameConfig, placements: Array) -> void:
+func save_state(config: GameConfig, placements: Array, elapsed_time: float = 0.0) -> void:
 	var data := {
-		"version":    APP_VERSION,
-		"config":     _config_to_dict(config),
-		"placements": placements,
+		"version":      APP_VERSION,
+		"config":       _config_to_dict(config),
+		"placements":   placements,
+		"elapsed_time": elapsed_time,
 	}
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file:
@@ -70,6 +71,13 @@ func load_placements() -> Array:
 	if data.is_empty() or not data.has("placements"):
 		return []
 	return data["placements"] as Array
+
+
+func load_elapsed_time() -> float:
+	var data := load_state()
+	if data.is_empty():
+		return 0.0
+	return float(data.get("elapsed_time", 0.0))
 
 
 func clear_save() -> void:
