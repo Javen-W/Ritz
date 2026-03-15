@@ -500,7 +500,9 @@ func _get_current_placements() -> Array:
 func _restore_placements(placements: Array) -> void:
 	var panel := $DominoPanel as DominoPanel
 	if panel == null:
+		push_error("Game: _restore_placements — DominoPanel not found")
 		return
+	print("Game: Restoring %d placements (panel stack size=%d)" % [placements.size(), panel.domino_stack.size()])
 	var restored := 0
 	for p in placements:
 		var dots1   := int(p.get("dots1",   0))
@@ -508,10 +510,12 @@ func _restore_placements(placements: Array) -> void:
 		var t1_pos  := Vector2i(int(p.get("tile1_x", 0)), int(p.get("tile1_y", 0)))
 		var t2_pos  := Vector2i(int(p.get("tile2_x", 0)), int(p.get("tile2_y", 0)))
 		if not grid.has(t1_pos) or not grid.has(t2_pos):
+			print("Game: Restore skip — grid missing pos %s or %s" % [t1_pos, t2_pos])
 			continue
 		var tile1: Tile = grid[t1_pos]
 		var tile2: Tile = grid[t2_pos]
 		if tile1.dots_value != -1 or tile2.dots_value != -1:
+			print("Game: Restore skip — tiles at %s/%s already occupied" % [t1_pos, t2_pos])
 			continue  # already occupied
 		# Find first unplaced domino with matching dot values
 		var found: Domino = null
@@ -530,6 +534,8 @@ func _restore_placements(placements: Array) -> void:
 					found = domino
 					break
 		if found == null:
+			push_warning("Game: Restore skip — no unplaced domino [%d|%d] in stack (size=%d)" % [
+				dots1, dots2, panel.domino_stack.size()])
 			continue
 		# Place the domino
 		found.visible = true

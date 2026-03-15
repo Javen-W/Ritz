@@ -12,12 +12,10 @@ func _ready() -> void:
 
 
 func save_state(config: GameConfig, placements: Array) -> void:
-	var cfg_dict := _config_to_dict(config)
 	var data := {
-		"version":     APP_VERSION,
-		"config_hash": _dict_hash(cfg_dict),
-		"config":      cfg_dict,
-		"placements":  placements,
+		"version":    APP_VERSION,
+		"config":     _config_to_dict(config),
+		"placements": placements,
 	}
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file:
@@ -43,20 +41,20 @@ func load_state() -> Dictionary:
 		clear_save()
 		return {}
 	var data := result as Dictionary
-	# Version check
+	# Version check: discard saves from incompatible versions
 	if data.get("version", "") != APP_VERSION:
 		push_warning("SaveManager: Save version '%s' != '%s' — discarding" % [
 			data.get("version", "?"), APP_VERSION])
 		clear_save()
 		return {}
-	# Config integrity check
-	if data.has("config") and data.has("config_hash"):
-		var expected_hash := _dict_hash(data["config"] as Dictionary)
-		var stored = data.get("config_hash", null)
-		if stored == null or int(stored) != expected_hash:
-			push_warning("SaveManager: Config hash mismatch — discarding corrupt save")
-			clear_save()
-			return {}
+	# Require both config and placements keys
+	if not data.has("config") or not data.has("placements"):
+		var missing := ([] as Array)
+		if not data.has("config"):    missing.append("config")
+		if not data.has("placements"): missing.append("placements")
+		push_warning("SaveManager: Save missing required fields [%s] — discarding" % ", ".join(missing))
+		clear_save()
+		return {}
 	return data
 
 
@@ -138,18 +136,3 @@ func _dict_to_config(d: Dictionary) -> GameConfig:
 	cfg.prob_less_than         = float(d.get("prob_less_than",         0.10))
 	cfg.prob_greater_than      = float(d.get("prob_greater_than",      0.10))
 	return cfg
-
-
-## Compute a deterministic integer hash for a config dictionary.
-## Keys are sorted and floats are formatted to 6 decimal places for stability.
-func _dict_hash(d: Dictionary) -> int:
-	var keys: Array = d.keys()
-	keys.sort()
-	var parts := PackedStringArray()
-	for k in keys:
-		var v = d[k]
-		if v is float:
-			parts.append(str(k) + "=" + ("%.6f" % v))
-		else:
-			parts.append(str(k) + "=" + str(v))
-	return hash("|".join(parts))
