@@ -178,23 +178,26 @@ func load_options() -> Dictionary:
 
 ## Apply saved display / render settings early (called from _ready).
 ## Audio settings are applied by MusicManager which runs immediately after.
+## Skipped when running in the Godot editor's embedded player (window APIs unsupported).
 func _apply_saved_display_settings() -> void:
 	var opts := load_options()
 	if opts.is_empty():
 		return
-	# Fullscreen
-	if bool(opts.get("fullscreen", false)):
-		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
-	# VSync
-	var vsync_mode := DisplayServer.VSYNC_ENABLED if bool(opts.get("vsync", true)) else DisplayServer.VSYNC_DISABLED
-	DisplayServer.window_set_vsync_mode(vsync_mode)
-	# Resolution (only in windowed mode)
-	if not bool(opts.get("fullscreen", false)):
-		var res_idx := int(opts.get("resolution_idx", 0))
-		if res_idx >= 0 and res_idx < RESOLUTIONS.size():
-			var res: Array = RESOLUTIONS[res_idx]
-			DisplayServer.window_set_size(Vector2i(res[0], res[1]))
-	# MSAA — deferred so the root viewport is fully initialized
+	# Window management APIs are not supported in the editor's embedded player.
+	if not OS.has_feature("editor"):
+		# Fullscreen
+		if bool(opts.get("fullscreen", false)):
+			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+		# VSync
+		var vsync_mode := DisplayServer.VSYNC_ENABLED if bool(opts.get("vsync", true)) else DisplayServer.VSYNC_DISABLED
+		DisplayServer.window_set_vsync_mode(vsync_mode)
+		# Resolution (only in windowed mode)
+		if not bool(opts.get("fullscreen", false)):
+			var res_idx := int(opts.get("resolution_idx", 0))
+			if res_idx >= 0 and res_idx < RESOLUTIONS.size():
+				var res: Array = RESOLUTIONS[res_idx]
+				DisplayServer.window_set_size(Vector2i(res[0], res[1]))
+	# MSAA works in all modes — deferred so the root viewport is fully initialized
 	var msaa_idx := int(opts.get("msaa", 0))
 	call_deferred("_apply_msaa", msaa_idx)
 

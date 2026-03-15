@@ -96,6 +96,10 @@ func _build_ui() -> void:
 	outer.add_child(HSeparator.new())
 	outer.add_child(_section_label("Display"))
 
+	# Window management APIs don't work in the Godot editor's embedded player.
+	# Disable those controls and show a note so the user isn't confused.
+	var embedded := OS.has_feature("editor")
+
 	var saved_res_idx := clampi(int(opts.get("resolution_idx", 0)), 0, SaveManager.RESOLUTIONS.size() - 1)
 	_resolution_opt = OptionButton.new()
 	_resolution_opt.focus_mode = Control.FOCUS_NONE
@@ -103,6 +107,7 @@ func _build_ui() -> void:
 	for res in SaveManager.RESOLUTIONS:
 		_resolution_opt.add_item("%dx%d" % [res[0], res[1]])
 	_resolution_opt.select(saved_res_idx)           # set BEFORE connecting signal
+	_resolution_opt.disabled = embedded
 	_resolution_opt.item_selected.connect(_on_resolution_selected)
 	outer.add_child(_row_with_label("Resolution", _resolution_opt))
 
@@ -112,6 +117,7 @@ func _build_ui() -> void:
 	_fullscreen_check.text = "Fullscreen"
 	_fullscreen_check.focus_mode = Control.FOCUS_NONE
 	_fullscreen_check.button_pressed = saved_fullscreen  # set BEFORE connecting signal
+	_fullscreen_check.disabled = embedded
 	_fullscreen_check.toggled.connect(_on_fullscreen_toggled)
 	outer.add_child(_fullscreen_check)
 
@@ -121,8 +127,17 @@ func _build_ui() -> void:
 	_vsync_check.text = "V-Sync"
 	_vsync_check.focus_mode = Control.FOCUS_NONE
 	_vsync_check.button_pressed = saved_vsync           # set BEFORE connecting signal
+	_vsync_check.disabled = embedded
 	_vsync_check.toggled.connect(_on_vsync_toggled)
 	outer.add_child(_vsync_check)
+
+	if embedded:
+		var note := Label.new()
+		note.text = "  (i) Window settings apply in the exported build only."
+		note.add_theme_font_size_override("font_size", LABEL_FONT_SIZE)
+		note.add_theme_color_override("font_color", Color(0.7, 0.7, 0.55, 0.85))
+		note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		outer.add_child(note)
 
 	# ── Render ───────────────────────────────────────────────────────────────
 	outer.add_child(HSeparator.new())
@@ -246,7 +261,8 @@ func _on_resolution_selected(idx: int) -> void:
 	if idx < 0 or idx >= SaveManager.RESOLUTIONS.size():
 		return
 	# Only resize in windowed mode — in fullscreen the OS controls resolution.
-	if DisplayServer.window_get_mode() != DisplayServer.WINDOW_MODE_FULLSCREEN:
+	# Skip entirely in the editor's embedded player (window_set_size not supported).
+	if not OS.has_feature("editor") and DisplayServer.window_get_mode() != DisplayServer.WINDOW_MODE_FULLSCREEN:
 		var res: Array = SaveManager.RESOLUTIONS[idx]
 		DisplayServer.window_set_size(Vector2i(res[0], res[1]))
 		print("OptionsMenu: Resolution → %dx%d" % [res[0], res[1]])
@@ -254,21 +270,23 @@ func _on_resolution_selected(idx: int) -> void:
 
 
 func _on_fullscreen_toggled(pressed: bool) -> void:
-	if pressed:
-		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
-	else:
-		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
-		# Re-apply the saved resolution when returning to windowed mode.
-		var idx := _resolution_opt.selected
-		if idx >= 0 and idx < SaveManager.RESOLUTIONS.size():
-			var res: Array = SaveManager.RESOLUTIONS[idx]
-			DisplayServer.window_set_size(Vector2i(res[0], res[1]))
+	if not OS.has_feature("editor"):
+		if pressed:
+			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+		else:
+			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+			# Re-apply the saved resolution when returning to windowed mode.
+			var idx := _resolution_opt.selected
+			if idx >= 0 and idx < SaveManager.RESOLUTIONS.size():
+				var res: Array = SaveManager.RESOLUTIONS[idx]
+				DisplayServer.window_set_size(Vector2i(res[0], res[1]))
 	_persist()
 
 
 func _on_vsync_toggled(pressed: bool) -> void:
-	var mode := DisplayServer.VSYNC_ENABLED if pressed else DisplayServer.VSYNC_DISABLED
-	DisplayServer.window_set_vsync_mode(mode)
+	if not OS.has_feature("editor"):
+		var mode := DisplayServer.VSYNC_ENABLED if pressed else DisplayServer.VSYNC_DISABLED
+		DisplayServer.window_set_vsync_mode(mode)
 	_persist()
 
 
