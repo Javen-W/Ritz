@@ -54,7 +54,9 @@ func _ready() -> void:
 		if saved_cfg != null:
 			config = saved_cfg
 			_pending_restore = SaveManager.load_placements()
-			_instant_gen = not _pending_restore.is_empty()
+			# Always use instant generation when resuming from any save state,
+			# even if no dominoes were placed yet (placements list is empty).
+			_instant_gen = true
 			print("Game: Loaded config from save (seed=%d, %d placements)" % [config.seed, _pending_restore.size()])
 		else:
 			config = GameConfig.new()
@@ -71,6 +73,7 @@ func _ready() -> void:
 	# Connect signals.
 	GameSignalbus.domino_assigned.connect(_on_domino_assigned)
 	GameSignalbus.domino_unassigned.connect(_on_domino_unassigned)
+	GameSignalbus.dominos_reset.connect(_on_dominos_reset)
 
 	# Kick off async game generation.
 	_generate_game_async()
@@ -290,6 +293,10 @@ func _on_domino_assigned(domino: Domino) -> void:
 		print("Game: All dominos placed but constraints not yet satisfied")
 
 func _on_domino_unassigned(domino: Domino) -> void:
+	_auto_save()
+
+func _on_dominos_reset() -> void:
+	# All dominos returned to panel — persist the cleared state immediately.
 	_auto_save()
 
 func validate_win_conditions() -> bool:

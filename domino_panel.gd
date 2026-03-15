@@ -207,3 +207,5 @@ func _on_reset_button_pressed() -> void:
 	if GameSignalbus.interaction_blocked:
 		return
 	reset_all_dominos()
+	# Notify game to persist the cleared state via signalbus (no direct coupling).
+	GameSignalbus.emit_dominos_reset()

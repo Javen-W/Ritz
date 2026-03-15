@@ -3,6 +3,7 @@ extends Node
 signal domino_generated(domino: Domino)
 signal domino_assigned(domino: Domino)
 signal domino_unassigned(domino: Domino)
+signal dominos_reset()
 signal game_won()
 signal game_state_changed(state: int)
 signal generation_update(message: String)
@@ -19,6 +20,9 @@ func emit_domino_assigned(domino: Domino) -> void:
 
 func emit_domino_unassigned(domino: Domino) -> void:
 	domino_unassigned.emit(domino)
+
+func emit_dominos_reset() -> void:
+	dominos_reset.emit()
 
 func emit_game_won() -> void:
 	game_won.emit()
