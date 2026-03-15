@@ -8,7 +8,8 @@ resource_local_to_scene = true
 shader = ExtResource("2_b7val")
 shader_parameter/dots1_value = 6
 shader_parameter/dots2_value = 6
-shader_parameter/corner_radius = 0.12
+shader_parameter/corner_radius = 0.08
+shader_parameter/highlighted = false
 
 [sub_resource type="QuadMesh" id="QuadMesh_o246h"]
 size = Vector2(128, 64)

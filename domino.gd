@@ -55,6 +55,10 @@ func update_pips() -> void:
 		shader_material.set_shader_parameter("dots1_value", self.dots1_value)
 		shader_material.set_shader_parameter("dots2_value", self.dots2_value)
 
+func set_highlighted(val: bool) -> void:
+	if shader_material:
+		shader_material.set_shader_parameter("highlighted", val)
+
 func rotate_once() -> void:
 	rotate(deg_to_rad(90.0)) # (Negative -> CCW).
 
@@ -307,12 +311,14 @@ func _on_domino_selected(domino: Domino) -> void:
 		mouse_collision.set_deferred("disabled", true)
 	else:
 		self.selected_domino = domino
+		set_highlighted(true)
 
 func _on_domino_deselected() -> void:
 	if self.selected_domino != self:
 		mouse_collision.set_deferred("disabled", false)
 	else:
 		self.selected_domino = null
+		set_highlighted(false)
 
 func _on_mouse_area_2d_mouse_entered() -> void:
 	if self.selected_domino != null:
