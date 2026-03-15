@@ -42,9 +42,30 @@ const CAMERA_SPEED: float = 200.0  # pixels per second
 var current_state: GameState = GameState.GENERATING
 var elapsed_time: float = 0.0
 
+# Pending domino placements to restore after generation (loaded from save)
+var _pending_restore: Array = []
+# Elapsed time loaded from save to restore after generation.
+var _pending_elapsed: float = 0.0
+# When true, skips per-tile/constraint frame-delays for instant generation.
+var _instant_gen: bool = false
+
 func _ready() -> void:
-	# Use GameConfig defaults so the initial game matches a fresh regenerate()
-	config = GameConfig.new()
+	# Load from save state if one exists, otherwise use defaults
+	if SaveManager.has_save:
+		var saved_cfg := SaveManager.load_config()
+		if saved_cfg != null:
+			config = saved_cfg
+			_pending_restore = SaveManager.load_placements()
+			_pending_elapsed = SaveManager.load_elapsed_time()
+			# Always use instant generation when resuming from any save state,
+			# even if no dominoes were placed yet (placements list is empty).
+			_instant_gen = true
+			print("Game: Loaded config from save (seed=%d, %d placements, elapsed=%.1fs)" % [config.seed, _pending_restore.size(), _pending_elapsed])
+		else:
+			config = GameConfig.new()
+	else:
+		config = GameConfig.new()
+
 	_apply_config(config)
 
 	# Position camera at board center; refined to tile centroid after generation
@@ -55,6 +76,7 @@ func _ready() -> void:
 	# Connect signals.
 	GameSignalbus.domino_assigned.connect(_on_domino_assigned)
 	GameSignalbus.domino_unassigned.connect(_on_domino_unassigned)
+	GameSignalbus.dominos_reset.connect(_on_dominos_reset)
 
 	# Kick off async game generation.
 	_generate_game_async()
@@ -69,7 +91,6 @@ func _set_state(state: GameState) -> void:
 			GameSignalbus.interaction_blocked = true
 		GameState.ACTIVE:
 			GameSignalbus.interaction_blocked = false
-			elapsed_time = 0.0
 		GameState.FINISHED:
 			GameSignalbus.interaction_blocked = true
 	GameSignalbus.emit_game_state_changed(state)
@@ -104,6 +125,8 @@ func regenerate(new_config: GameConfig) -> void:
 	_set_state(GameState.GENERATING)
 	GameSignalbus.emit_generation_update("Clearing previous game...")
 	_apply_config(new_config)
+	_pending_restore = []  # fresh regeneration — no placements to restore
+	_instant_gen = false
 	_clear_game()
 	var board_center := Vector2(MAP_SIZE / 2.0, MAP_SIZE / 2.0) * 64.0
 	camera2d.global_position = board_center
@@ -172,12 +195,34 @@ func _generate_game_async() -> void:
 	print("Game: Generated %d tiles, %d dominos, %d constraints (seed=%d)" % [
 		grid.size(), NUMBER_DOMINOS, constraints.size(), SEED
 	])
+	# Persist the configuration (placements are empty at this point;
+	# use _pending_elapsed so the saved timer is correct for resumed sessions).
+	SaveManager.save_state(config, [], _pending_elapsed)
+	# Apply config to the GenPanel so its controls reflect the loaded/current config
+	var gen_panel := $GenPanel as GenPanel
+	if gen_panel:
+		gen_panel.apply_config(config)
 	_set_state(GameState.ACTIVE)
+	# Restore the elapsed timer from a previous session (overrides the 0.0 set by _set_state).
+	elapsed_time = _pending_elapsed
+	_pending_elapsed = 0.0
+	# Restore saved placements (if any) after the panel's initial shuffle is done
+	if not _pending_restore.is_empty():
+		await get_tree().process_frame
+		await get_tree().process_frame
+		_restore_placements(_pending_restore)
+		_pending_restore = []
 
 func _process(delta: float) -> void:
 	# Advance the play timer only while the game is active.
 	if current_state == GameState.ACTIVE:
 		elapsed_time += delta
+	
+	# Escape: return to main menu (only when the game is not generating)
+	if current_state != GameState.GENERATING and Input.is_action_just_pressed("ui_cancel"):
+		_auto_save()
+		get_tree().change_scene_to_file("res://main_menu.tscn")
+		return
 	
 	var camera_input = Vector2.ZERO
 
@@ -206,6 +251,18 @@ func _process(delta: float) -> void:
 	if Input.is_action_just_pressed("ui_select"):
 		camera2d.global_position = camera_center
 
+
+## Release keyboard focus from any focused UI control (e.g. a SpinBox LineEdit)
+## when the user clicks on the game world, so arrow keys pan the camera again.
+func _unhandled_input(event: InputEvent) -> void:
+	if not (event is InputEventMouseButton):
+		return
+	if event.button_index != MOUSE_BUTTON_LEFT or not event.is_pressed():
+		return
+	var focus := get_viewport().gui_get_focus_owner()
+	if focus:
+		focus.release_focus()
+
 func _constrain_camera_position(target_pos: Vector2) -> Vector2:
 	var board_size = MAP_SIZE * 64.0
 	var viewport_size = get_viewport().get_visible_rect().size / camera2d.zoom
@@ -231,6 +288,7 @@ func _on_domino_assigned(domino: Domino) -> void:
 	assigned_dominos.add_child(domino)
 	var placed_count := assigned_dominos.get_child_count()
 	print("Game: Domino assigned (%d/%d placed)" % [placed_count, NUMBER_DOMINOS])
+	_auto_save()
 	
 	# Check if all conditions have been met for a game win.
 	var all_conditions_met := validate_win_conditions()
@@ -242,7 +300,11 @@ func _on_domino_assigned(domino: Domino) -> void:
 		print("Game: All dominos placed but constraints not yet satisfied")
 
 func _on_domino_unassigned(domino: Domino) -> void:
-	pass
+	_auto_save()
+
+func _on_dominos_reset() -> void:
+	# All dominos returned to panel — persist the cleared state immediately.
+	_auto_save()
 
 func validate_win_conditions() -> bool:
 	# No empty tiles.
@@ -300,7 +362,9 @@ func _generate_tiles_async() -> void:
 			"Generated domino %d / %d..." % [domino_count, NUMBER_DOMINOS]
 		)
 		# Yield a frame so the overlay updates and tiles become visible incrementally.
-		await get_tree().process_frame
+		# Skip when restoring from save for instant (non-animated) generation.
+		if not _instant_gen:
+			await get_tree().process_frame
 		
 		# Update next position
 		if rng.randf() < config.tile_path_branch_prob:
@@ -409,7 +473,8 @@ func _generate_constraints_async() -> void:
 		GameSignalbus.emit_generation_update(
 			"Generated constraint %d (%d tiles remaining)..." % [constraint_count, remaining_tiles.size()]
 		)
-		await get_tree().process_frame
+		if not _instant_gen:
+			await get_tree().process_frame
 
 func shuffle_array(a: Array) -> Array:
 	var t = a.duplicate()
@@ -418,3 +483,95 @@ func shuffle_array(a: Array) -> Array:
 		var element = t.pop_at(rng.randi() % t.size())
 		b.append(element)
 	return b
+
+# --------------------------------------------------------------
+# Save / restore helpers
+# --------------------------------------------------------------
+func _auto_save() -> void:
+	SaveManager.save_state(config, _get_current_placements(), elapsed_time)
+
+func _get_current_placements() -> Array:
+	var placements := []
+	for node in assigned_dominos.get_children():
+		var domino := node as Domino
+		if domino == null or not domino.is_placed or domino.tile1 == null or domino.tile2 == null:
+			continue
+		var t1_pos := Vector2i(roundi(domino.tile1.position.x / 64.0), roundi(domino.tile1.position.y / 64.0))
+		var t2_pos := Vector2i(roundi(domino.tile2.position.x / 64.0), roundi(domino.tile2.position.y / 64.0))
+		placements.append({
+			# Save the actual value displayed on each tile, not domino.dots1/2_value,
+			# so that 180° flips (which swap tile1/tile2 but not the dot fields) are
+			# recorded correctly.
+			"dots1":   domino.tile1.dots_value,
+			"dots2":   domino.tile2.dots_value,
+			"tile1_x": t1_pos.x,
+			"tile1_y": t1_pos.y,
+			"tile2_x": t2_pos.x,
+			"tile2_y": t2_pos.y,
+		})
+	return placements
+
+func _restore_placements(placements: Array) -> void:
+	var panel := $DominoPanel as DominoPanel
+	if panel == null:
+		push_error("Game: _restore_placements — DominoPanel not found")
+		return
+	print("Game: Restoring %d placements (panel stack size=%d)" % [placements.size(), panel.domino_stack.size()])
+	var restored := 0
+	for p in placements:
+		var dots1   := int(p.get("dots1",   0))
+		var dots2   := int(p.get("dots2",   0))
+		var t1_pos  := Vector2i(int(p.get("tile1_x", 0)), int(p.get("tile1_y", 0)))
+		var t2_pos  := Vector2i(int(p.get("tile2_x", 0)), int(p.get("tile2_y", 0)))
+		if not grid.has(t1_pos) or not grid.has(t2_pos):
+			print("Game: Restore skip — grid missing pos %s or %s" % [t1_pos, t2_pos])
+			continue
+		var tile1: Tile = grid[t1_pos]
+		var tile2: Tile = grid[t2_pos]
+		if tile1.dots_value != -1 or tile2.dots_value != -1:
+			print("Game: Restore skip — tiles at %s/%s already occupied" % [t1_pos, t2_pos])
+			continue  # already occupied
+		# Find first unplaced domino with matching dot values
+		var found: Domino = null
+		for domino in panel.domino_stack:
+			if not domino.is_placed and domino.dots1_value == dots1 and domino.dots2_value == dots2:
+				found = domino
+				break
+		if found == null:
+			for domino in panel.domino_stack:
+				if not domino.is_placed and domino.dots1_value == dots2 and domino.dots2_value == dots1:
+					# Need to swap so dots1 lands on tile1
+					var tmp := domino.dots1_value
+					domino.dots1_value = domino.dots2_value
+					domino.dots2_value = tmp
+					domino.update_pips()
+					found = domino
+					break
+		if found == null:
+			push_warning("Game: Restore skip — no unplaced domino [%d|%d] in stack (size=%d)" % [
+				dots1, dots2, panel.domino_stack.size()])
+			continue
+		# Place the domino
+		found.visible = true
+		found.scale   = Vector2.ONE
+		found.z_index = 3
+		found.tile1 = tile1
+		found.tile2 = tile2
+		tile1.place_dots(found.dots1_value)
+		tile2.place_dots(found.dots2_value)
+		found.is_placed = true
+		found.is_from_panel = false
+		found.update_position_to_tiles(tile1, tile2, Vector2.ZERO)
+		found.rotation = found._rotation_for_pair(tile1.position, tile2.position)
+		panel.remove_domino_from_stack(found)
+		if found.get_parent():
+			found.get_parent().remove_child(found)
+		assigned_dominos.add_child(found)
+		restored += 1
+	print("Game: Restored %d/%d placements from save state" % [restored, placements.size()])
+	# Persist the restored state
+	_auto_save()
+	# Re-check win conditions after full restoration
+	if validate_win_conditions():
+		_set_state(GameState.FINISHED)
+		GameSignalbus.emit_game_won()

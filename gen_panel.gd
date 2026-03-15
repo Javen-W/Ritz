@@ -44,7 +44,12 @@ var _prob_greater_pair : Array
 func _ready() -> void:
 	layer = 50   # above game world, below HUD (layer 100)
 	_build_ui()
-	_apply_config_to_controls(GameConfig.new())
+	# Load config from save state if available; otherwise apply defaults
+	if SaveManager.has_save:
+		var saved := SaveManager.load_config()
+		_apply_config_to_controls(saved if saved != null else GameConfig.new())
+	else:
+		_apply_config_to_controls(GameConfig.new())
 
 # ── UI construction ──────────────────────────────────────────────────────────
 
@@ -201,6 +206,7 @@ func _build_ui() -> void:
 	reset_defaults_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	reset_defaults_btn.add_theme_font_size_override("font_size", 11)
 	reset_defaults_btn.pressed.connect(_on_reset_defaults_pressed)
+	MusicManager.setup_button(reset_defaults_btn)
 	util_row.add_child(reset_defaults_btn)
 
 	var copy_btn := Button.new()
@@ -209,6 +215,7 @@ func _build_ui() -> void:
 	copy_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	copy_btn.add_theme_font_size_override("font_size", 11)
 	copy_btn.pressed.connect(_on_copy_config_pressed)
+	MusicManager.setup_button(copy_btn)
 	util_row.add_child(copy_btn)
 
 	var gen_btn := Button.new()
@@ -217,6 +224,9 @@ func _build_ui() -> void:
 	gen_btn.add_theme_font_size_override("font_size", 15)
 	gen_btn.custom_minimum_size = Vector2(0, 42)
 	gen_btn.pressed.connect(_on_generate_pressed)
+	MusicManager.setup_button(gen_btn,
+		Color(0.10, 0.35, 0.18, 0.92),
+		Color(0.15, 0.52, 0.25, 0.97))
 	outer.add_child(gen_btn)
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -355,6 +365,11 @@ func _apply_config_to_controls(cfg: GameConfig) -> void:
 	(_prob_greater_pair[0] as HSlider).value = cfg.prob_greater_than
 
 # ── Event handlers ────────────────────────────────────────────────────────────
+
+## Public method called by Game to sync the panel controls with the active config,
+## e.g. after loading a saved game or after generating a new game.
+func apply_config(cfg: GameConfig) -> void:
+	_apply_config_to_controls(cfg)
 
 func _on_reset_defaults_pressed() -> void:
 	_apply_config_to_controls(GameConfig.new())
