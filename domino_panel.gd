@@ -5,6 +5,7 @@ class_name DominoPanel
 
 var domino_stack: Array[Domino] = []
 var current_index: int = 0
+var _page_index: int = 0
 const VISIBLE_COUNT: int = 7
 const DOMINO_SPACING: float = 150.0
 const PANEL_OFFSET_Y: float = -90.0  # World-space Y offset above camera bottom edge
@@ -12,11 +13,17 @@ const PANEL_HEIGHT: float = 160.0
 const CORNER_RADIUS: float = 20.0
 # Reserve screen space for the always-visible GenPanel on the right
 const GEN_PANEL_WIDTH: float = 340.0
+# Preview stack appearance
+const PREVIEW_MODULATE := Color(0.45, 0.45, 0.45, 0.6)
+const PREVIEW_OFFSET   := Vector2(10.0, -10.0)
 
 var _bg: Polygon2D
 var _last_bg_width: float = 0.0
 var _button_container: VBoxContainer
 var _shuffle_pending := false
+var _prev_btn: Button
+var _next_btn: Button
+var _page_label: Label
 
 func _ready() -> void:
 	_bg = Polygon2D.new()
@@ -45,6 +52,37 @@ func _ready() -> void:
 	_button_container.add_child(shuffle_btn)
 	shuffle_btn.pressed.connect(_on_shuffle_button_pressed)
 	MusicManager.setup_button(shuffle_btn)
+
+	# Pagination row: [◀]  Stack 1 / 2  [▶]
+	var page_hbox := HBoxContainer.new()
+	page_hbox.add_theme_constant_override("separation", 4)
+	page_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	_button_container.add_child(page_hbox)
+
+	_prev_btn = Button.new()
+	_prev_btn.text = "◀"
+	_prev_btn.focus_mode = Control.FOCUS_NONE
+	_prev_btn.custom_minimum_size = Vector2(32, 0)
+	page_hbox.add_child(_prev_btn)
+	_prev_btn.pressed.connect(_on_prev_page_pressed)
+	MusicManager.setup_button(_prev_btn)
+
+	_page_label = Label.new()
+	_page_label.text = "Stack 1 / 1"
+	_page_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_page_label.custom_minimum_size = Vector2(90, 0)
+	_page_label.add_theme_font_size_override("font_size", 13)
+	page_hbox.add_child(_page_label)
+
+	_next_btn = Button.new()
+	_next_btn.text = "▶"
+	_next_btn.focus_mode = Control.FOCUS_NONE
+	_next_btn.custom_minimum_size = Vector2(32, 0)
+	page_hbox.add_child(_next_btn)
+	_next_btn.pressed.connect(_on_next_page_pressed)
+	MusicManager.setup_button(_next_btn)
+
+	_update_pagination_ui()
 
 	GameSignalbus.domino_generated.connect(_on_domino_generated)
 	GameSignalbus.domino_unassigned.connect(_on_domino_unassigned)
@@ -117,8 +155,12 @@ func add_domino_to_stack(domino: Domino) -> void:
 		print("DominoPanel: Added domino — stack size now %d" % domino_stack.size())
 
 	_layout_dominos()
-	# Compute the expected slot position directly so picked dominos get the right origin
-	domino.panel_origin_position = _slot_local_position(domino_stack.find(domino))
+	# Compute the expected slot position for the domino's page slot
+	var idx := domino_stack.find(domino)
+	var domino_page := idx / VISIBLE_COUNT
+	var slot_in_page := idx % VISIBLE_COUNT
+	if domino_page == _page_index:
+		domino.panel_origin_position = _slot_local_position(slot_in_page)
 
 func shuffle_stack() -> void:
 	if domino_stack.is_empty():
@@ -130,6 +172,7 @@ func shuffle_stack() -> void:
 		var tmp := domino_stack[i]
 		domino_stack[i] = domino_stack[j]
 		domino_stack[j] = tmp
+	_page_index = 0
 	current_index = 0
 	# Shuffle all panel domino orientations.
 	for domino in domino_stack:
@@ -141,43 +184,77 @@ func shuffle_stack() -> void:
 func shuffle_to_next() -> void:
 	if domino_stack.is_empty():
 		return
-	current_index = (current_index + 1) % domino_stack.size()
-	_layout_dominos()
+	_go_to_page(_page_index + 1)
 
 func shuffle_to_previous() -> void:
 	if domino_stack.is_empty():
 		return
-	current_index = (current_index - 1 + domino_stack.size()) % domino_stack.size()
+	_go_to_page(_page_index - 1)
+
+func _total_pages() -> int:
+	return max(1, ceili(domino_stack.size() / float(VISIBLE_COUNT)))
+
+func _go_to_page(page: int) -> void:
+	var total := _total_pages()
+	_page_index = ((page % total) + total) % total
+	current_index = _page_index * VISIBLE_COUNT
 	_layout_dominos()
 
-func _slot_local_position(stack_index: int) -> Vector2:
-	var n := domino_stack.size()
-	if n == 0:
-		return Vector2.ZERO
-	var slot := ((stack_index - current_index) % n + n) % n
+func _update_pagination_ui() -> void:
+	if not is_instance_valid(_page_label) or not is_instance_valid(_prev_btn) or not is_instance_valid(_next_btn):
+		return
+	var total := _total_pages()
+	_page_label.text = "Stack %d / %d" % [_page_index + 1, total]
+	var has_multiple := total > 1
+	_prev_btn.visible = has_multiple
+	_next_btn.visible = has_multiple
+
+# Returns the local position for a domino in the given page slot (0-based within a page).
+func _slot_local_position(slot: int) -> Vector2:
 	return Vector2(-(VISIBLE_COUNT - 1) / 2.0 * DOMINO_SPACING + slot * DOMINO_SPACING, 0.0)
 
 func _layout_dominos() -> void:
 	var n := domino_stack.size()
+	if n == 0:
+		_update_pagination_ui()
+		return
+
+	var total := _total_pages()
+	var cur_start  := _page_index * VISIBLE_COUNT
+	var next_page  := (_page_index + 1) % total
+	var next_start := next_page * VISIBLE_COUNT
+
 	for i in range(n):
 		var domino := domino_stack[i]
 		if domino.is_picked:
 			continue
 
-		var slot := ((i - current_index) % n + n) % n
-
-		if slot < VISIBLE_COUNT:
+		if i >= cur_start and i < cur_start + VISIBLE_COUNT:
+			# Current page — show normally
 			domino.visible = true
-			domino.position = _slot_local_position(i)
+			domino.position = _slot_local_position(i - cur_start)
 			domino.scale = Vector2.ONE
 			domino.z_index = 10
+			domino.modulate = Color.WHITE
+		elif total > 1 and i >= next_start and i < next_start + VISIBLE_COUNT:
+			# Next page — show as translucent preview behind current stack
+			domino.visible = true
+			domino.position = _slot_local_position(i - next_start) + PREVIEW_OFFSET
+			domino.scale = Vector2.ONE
+			domino.z_index = 5
+			domino.modulate = PREVIEW_MODULATE
 		else:
 			domino.visible = false
+
+	_update_pagination_ui()
 
 func remove_domino_from_stack(domino: Domino) -> void:
 	if domino_stack.has(domino):
 		domino_stack.erase(domino)
 		print("DominoPanel: Removed domino — stack size now %d" % domino_stack.size())
+		# Clamp page index in case removing shrank the stack below the current page
+		_page_index = clampi(_page_index, 0, max(0, _total_pages() - 1))
+		current_index = _page_index * VISIBLE_COUNT
 		_layout_dominos()
 
 func reset_all_dominos() -> void:
@@ -196,6 +273,9 @@ func reset_all_dominos() -> void:
 		domino.is_placed = false
 		domino.is_from_panel = true
 		add_domino_to_stack(domino)
+	_page_index = 0
+	current_index = 0
+	_layout_dominos()
 	print("DominoPanel: Reset %d placed dominos back to panel" % to_reset.size())
 
 func _on_shuffle_button_pressed() -> void:
@@ -209,3 +289,13 @@ func _on_reset_button_pressed() -> void:
 	reset_all_dominos()
 	# Notify game to persist the cleared state via signalbus (no direct coupling).
 	GameSignalbus.emit_dominos_reset()
+
+func _on_prev_page_pressed() -> void:
+	if GameSignalbus.interaction_blocked:
+		return
+	_go_to_page(_page_index - 1)
+
+func _on_next_page_pressed() -> void:
+	if GameSignalbus.interaction_blocked:
+		return
+	_go_to_page(_page_index + 1)
