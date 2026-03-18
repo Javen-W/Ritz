@@ -107,26 +107,27 @@ void fragment() {
 	float shape = 1.0 - smoothstep(-aa, aa, d);
 	if (shape < 0.001) {
 		COLOR = vec4(0.0);
-		return;
 	}
+	else
+	{
+		// Background colour (highlighted = golden)
+		vec4 bg = highlighted ? BG_HIGHLIGHT_COLOR : BG_COLOR;
 
-	// Background colour (highlighted = golden)
-	vec4 bg = highlighted ? BG_HIGHLIGHT_COLOR : BG_COLOR;
+		// Inset the bg region to leave a thin border
+		float inner_mask = 1.0 - smoothstep(-aa, aa, d + BORDER_THICKNESS);
+		vec4 col = mix(BORDER_COLOR, bg, inner_mask);
 
-	// Inset the bg region to leave a thin border
-	float inner_mask = 1.0 - smoothstep(-aa, aa, d + BORDER_THICKNESS);
-	vec4 col = mix(BORDER_COLOR, bg, inner_mask);
+		// Centre divider line
+		float div_d  = abs(p.x) - DIVIDER_HALF_WIDTH;
+		float div_aa = max(fwidth(div_d), 0.001);
+		float div    = 1.0 - smoothstep(-div_aa, div_aa, div_d);
+		col = mix(col, DIVIDER_COLOR, div * inner_mask);
 
-	// Centre divider line
-	float div_d  = abs(p.x) - DIVIDER_HALF_WIDTH;
-	float div_aa = max(fwidth(div_d), 0.001);
-	float div    = 1.0 - smoothstep(-div_aa, div_aa, div_d);
-	col = mix(col, DIVIDER_COLOR, div * inner_mask);
+		// Pips
+		float dots = max(draw_pips(uv, dots1_value, 0), draw_pips(uv, dots2_value, 1));
+		col = mix(col, DOT_COLOR, dots * inner_mask);
 
-	// Pips
-	float dots = max(draw_pips(uv, dots1_value, 0), draw_pips(uv, dots2_value, 1));
-	col = mix(col, DOT_COLOR, dots * inner_mask);
-
-	// Final colour with shape alpha for smooth outer edge
-	COLOR = vec4(col.rgb, shape);
+		// Final colour with shape alpha for smooth outer edge
+		COLOR = vec4(col.rgb, shape);
+	}
 }
