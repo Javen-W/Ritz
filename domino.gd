@@ -21,6 +21,7 @@ var is_picked : bool = false
 var is_from_panel : bool = false
 var panel_origin_position : Vector2 = Vector2.ZERO
 var is_placed : bool = false
+var is_interactive : bool = true
 
 var _mouse_pressed: bool = false
 var _press_world_pos: Vector2 = Vector2.ZERO
@@ -59,7 +60,7 @@ func rotate_once() -> void:
 	rotate(deg_to_rad(90.0)) # (Negative -> CCW).
 
 func _unhandled_input(event: InputEvent) -> void:
-	if GameSignalbus.interaction_blocked:
+	if GameSignalbus.interaction_blocked or not is_interactive:
 		return
 	if event is InputEventMouseMotion:
 		# Start dragging only once the mouse has moved far enough from the press point
@@ -310,12 +311,13 @@ func _on_domino_selected(domino: Domino) -> void:
 
 func _on_domino_deselected() -> void:
 	if self.selected_domino != self:
-		mouse_collision.set_deferred("disabled", false)
+		if is_interactive:
+			mouse_collision.set_deferred("disabled", false)
 	else:
 		self.selected_domino = null
 
 func _on_mouse_area_2d_mouse_entered() -> void:
-	if self.selected_domino != null:
+	if not is_interactive or self.selected_domino != null:
 		return
 	get_tree().call_group("dominos", "_on_domino_selected", self)
 	# print("Mouse area2d entered.")

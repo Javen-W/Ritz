@@ -109,9 +109,9 @@ func _process(_delta: float) -> void:
 		viewport_size.y / (2.0 * camera.zoom.y) + PANEL_OFFSET_Y
 	)
 
-	# Panel width = 75% of the available screen area (viewport minus GenPanel)
+	# Panel width = 65% of the available screen area (viewport minus GenPanel)
 	var avail_screen := viewport_size.x - GEN_PANEL_WIDTH
-	var w := avail_screen / camera.zoom.x * 0.75
+	var w := avail_screen / camera.zoom.x * 0.65
 	if not is_equal_approx(w, _last_bg_width):
 		_last_bg_width = w
 		_bg.polygon = _make_rounded_rect_polygon(w, PANEL_HEIGHT, CORNER_RADIUS)
@@ -234,6 +234,7 @@ func _layout_dominos() -> void:
 			domino.scale = Vector2.ONE
 			domino.z_index = 10
 			domino.modulate = Color.WHITE
+			domino.is_interactive = true
 			domino.mouse_collision.set_deferred("disabled", false)
 		elif total > 1 and i >= next_start and i < next_start + VISIBLE_COUNT:
 			# Next page — show as translucent preview behind current stack; not interactive
@@ -242,9 +243,11 @@ func _layout_dominos() -> void:
 			domino.scale = Vector2.ONE
 			domino.z_index = 5
 			domino.modulate = PREVIEW_MODULATE
+			domino.is_interactive = false
 			domino.mouse_collision.set_deferred("disabled", true)
 		else:
 			domino.visible = false
+			domino.is_interactive = false
 			domino.mouse_collision.set_deferred("disabled", true)
 
 	_update_pagination_ui()
