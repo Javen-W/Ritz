@@ -11,10 +11,10 @@ uniform float corner_radius : hint_range(0.0, 0.4) = 0.08;
 uniform bool highlighted = false;
 
 const float DOT_RADIUS = 0.075;
-const float BORDER_THICKNESS   = 0.045;   // inset from outer edge
+const float BORDER_THICKNESS   = 0.035;   // inset from outer edge
 const float DIVIDER_HALF_WIDTH = 0.028;   // half-width of centre divider
 const vec4 BG_COLOR           = vec4(0.97, 0.95, 0.88, 1.0);  // ivory
-const vec4 BG_HIGHLIGHT_COLOR = vec4(1.00, 0.88, 0.25, 1.0);  // golden
+const vec4 BG_HIGHLIGHT_COLOR = vec4(1.00, 1.00, 1.00, 0.00);  // golden
 const vec4 DOT_COLOR          = vec4(0.12, 0.10, 0.10, 1.0);  // near-black
 const vec4 BORDER_COLOR       = vec4(0.18, 0.15, 0.12, 1.0);  // dark brown
 const vec4 DIVIDER_COLOR      = vec4(0.18, 0.15, 0.12, 1.0);  // same as border
