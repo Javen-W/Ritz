@@ -53,7 +53,7 @@ func _ready() -> void:
 	shuffle_btn.pressed.connect(_on_shuffle_button_pressed)
 	MusicManager.setup_button(shuffle_btn)
 
-	# Pagination row: [◀]  Stack 1 / 2  [▶]
+	# Pagination row: [◀]  1 / 2  [▶]
 	var page_hbox := HBoxContainer.new()
 	page_hbox.add_theme_constant_override("separation", 4)
 	page_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -62,22 +62,20 @@ func _ready() -> void:
 	_prev_btn = Button.new()
 	_prev_btn.text = "◀"
 	_prev_btn.focus_mode = Control.FOCUS_NONE
-	_prev_btn.custom_minimum_size = Vector2(32, 0)
 	page_hbox.add_child(_prev_btn)
 	_prev_btn.pressed.connect(_on_prev_page_pressed)
 	MusicManager.setup_button(_prev_btn)
 
 	_page_label = Label.new()
-	_page_label.text = "Stack 1 / 1"
+	_page_label.text = "1 / 1"
 	_page_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_page_label.custom_minimum_size = Vector2(90, 0)
-	_page_label.add_theme_font_size_override("font_size", 13)
+	_page_label.custom_minimum_size = Vector2(44, 0)
+	_page_label.add_theme_font_size_override("font_size", 11)
 	page_hbox.add_child(_page_label)
 
 	_next_btn = Button.new()
 	_next_btn.text = "▶"
 	_next_btn.focus_mode = Control.FOCUS_NONE
-	_next_btn.custom_minimum_size = Vector2(32, 0)
 	page_hbox.add_child(_next_btn)
 	_next_btn.pressed.connect(_on_next_page_pressed)
 	MusicManager.setup_button(_next_btn)
@@ -204,7 +202,7 @@ func _update_pagination_ui() -> void:
 	if not is_instance_valid(_page_label) or not is_instance_valid(_prev_btn) or not is_instance_valid(_next_btn):
 		return
 	var total := _total_pages()
-	_page_label.text = "Stack %d / %d" % [_page_index + 1, total]
+	_page_label.text = "%d / %d" % [_page_index + 1, total]
 	var has_multiple := total > 1
 	_prev_btn.visible = has_multiple
 	_next_btn.visible = has_multiple
@@ -230,21 +228,24 @@ func _layout_dominos() -> void:
 			continue
 
 		if i >= cur_start and i < cur_start + VISIBLE_COUNT:
-			# Current page — show normally
+			# Current page — show normally and allow interaction
 			domino.visible = true
 			domino.position = _slot_local_position(i - cur_start)
 			domino.scale = Vector2.ONE
 			domino.z_index = 10
 			domino.modulate = Color.WHITE
+			domino.mouse_collision.set_deferred("disabled", false)
 		elif total > 1 and i >= next_start and i < next_start + VISIBLE_COUNT:
-			# Next page — show as translucent preview behind current stack
+			# Next page — show as translucent preview behind current stack; not interactive
 			domino.visible = true
 			domino.position = _slot_local_position(i - next_start) + PREVIEW_OFFSET
 			domino.scale = Vector2.ONE
 			domino.z_index = 5
 			domino.modulate = PREVIEW_MODULATE
+			domino.mouse_collision.set_deferred("disabled", true)
 		else:
 			domino.visible = false
+			domino.mouse_collision.set_deferred("disabled", true)
 
 	_update_pagination_ui()
 
