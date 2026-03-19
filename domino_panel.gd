@@ -116,12 +116,14 @@ func _process(_delta: float) -> void:
 		_last_bg_width = w
 		_bg.polygon = _make_rounded_rect_polygon(w, PANEL_HEIGHT, CORNER_RADIUS)
 
-	# Position buttons just outside the right edge of the panel background
+	# Position buttons just outside the right edge of the panel background,
+	# with the button container's bottom edge aligned with the panel bottom edge.
 	var panel_screen_y := viewport_size.y + PANEL_OFFSET_Y * camera.zoom.y
+	var panel_bottom_screen_y := panel_screen_y + PANEL_HEIGHT / 2.0 * camera.zoom.y
 	var panel_right_screen_x := viewport_size.x / 2.0 - GEN_PANEL_WIDTH / 2.0 + _last_bg_width / 2.0 * camera.zoom.x + 8.0
 	_button_container.position = Vector2(
 		panel_right_screen_x,
-		panel_screen_y - _button_container.size.y / 2.0
+		panel_bottom_screen_y - _button_container.size.y
 	)
 
 func _on_domino_generated(domino: Domino) -> void:
@@ -203,9 +205,6 @@ func _update_pagination_ui() -> void:
 		return
 	var total := _total_pages()
 	_page_label.text = "%d / %d" % [_page_index + 1, total]
-	var has_multiple := total > 1
-	_prev_btn.visible = has_multiple
-	_next_btn.visible = has_multiple
 
 # Returns the local position for a domino in the given page slot (0-based within a page).
 func _slot_local_position(slot: int) -> Vector2:
