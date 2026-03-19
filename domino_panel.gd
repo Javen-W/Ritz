@@ -38,21 +38,7 @@ func _ready() -> void:
 	_button_container = VBoxContainer.new()
 	_button_container.add_theme_constant_override("separation", 6)
 	canvas.add_child(_button_container)
-
-	var reset_btn := Button.new()
-	reset_btn.text = "↺ Reset"
-	reset_btn.focus_mode = Control.FOCUS_NONE
-	_button_container.add_child(reset_btn)
-	reset_btn.pressed.connect(_on_reset_button_pressed)
-	MusicManager.setup_button(reset_btn)
-
-	var shuffle_btn := Button.new()
-	shuffle_btn.text = "⇄ Shuffle"
-	shuffle_btn.focus_mode = Control.FOCUS_NONE
-	_button_container.add_child(shuffle_btn)
-	shuffle_btn.pressed.connect(_on_shuffle_button_pressed)
-	MusicManager.setup_button(shuffle_btn)
-
+	
 	# Pagination row: [◀]  1 / 2  [▶]
 	var page_hbox := HBoxContainer.new()
 	page_hbox.add_theme_constant_override("separation", 4)
@@ -81,6 +67,20 @@ func _ready() -> void:
 	MusicManager.setup_button(_next_btn)
 
 	_update_pagination_ui()
+
+	var reset_btn := Button.new()
+	reset_btn.text = "↺ Reset"
+	reset_btn.focus_mode = Control.FOCUS_NONE
+	_button_container.add_child(reset_btn)
+	reset_btn.pressed.connect(_on_reset_button_pressed)
+	MusicManager.setup_button(reset_btn)
+
+	var shuffle_btn := Button.new()
+	shuffle_btn.text = "⇄ Shuffle"
+	shuffle_btn.focus_mode = Control.FOCUS_NONE
+	_button_container.add_child(shuffle_btn)
+	shuffle_btn.pressed.connect(_on_shuffle_button_pressed)
+	MusicManager.setup_button(shuffle_btn)
 
 	GameSignalbus.domino_generated.connect(_on_domino_generated)
 	GameSignalbus.domino_unassigned.connect(_on_domino_unassigned)
