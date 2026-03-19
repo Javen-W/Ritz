@@ -129,5 +129,10 @@ void fragment() {
 
 		// Final colour with shape alpha for smooth outer edge
 		COLOR = vec4(col.rgb, shape);
+
+		// Apply the node's modulate (includes parent modulate, e.g. PREVIEW_MODULATE
+		// set by DominoPanel on preview-stack dominos).  Canvas-item ShaderMaterials
+		// do NOT apply MODULATE automatically — the shader must do it explicitly.
+		COLOR *= MODULATE;
 	}
 }
