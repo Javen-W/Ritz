@@ -139,6 +139,7 @@ func _clear_game() -> void:
 	if panel:
 		panel.domino_stack.clear()
 		panel.current_index = 0
+		panel._page_index = 0
 		panel._shuffle_pending = false
 
 	# Free all dominos wherever they live (panel, AssignedDominos, etc.)
