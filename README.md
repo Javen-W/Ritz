@@ -12,6 +12,7 @@
 - [Technical Overview](#technical-overview)
 - [Setup & Build](#setup--build)
 - [Project Structure](#project-structure)
+- [License](#license)
 
 ---
 
@@ -233,3 +234,8 @@ Ritz/
 ├── main_menu.gd / .tscn       # Main menu
 └── options_menu.gd            # Options menu
 ```
+---
+
+## License
+
+This project is licensed under the [PolyForm Noncommercial License 1.0.0](LICENSE.md). The source is public for learning, feedback, and non-commercial use. Commercial publication rights are reserved exclusively by the author.
