@@ -577,6 +577,12 @@ func _restore_placements(placements: Array) -> void:
 		found.update_position_to_tiles(tile1, tile2, Vector2.ZERO)
 		found.rotation = found._rotation_for_pair(tile1.position, tile2.position)
 		panel.remove_domino_from_stack(found)
+		# _layout_dominos() (called inside remove_domino_from_stack) may have previously
+		# marked this domino as a panel preview — non-interactive and translucent.
+		# Reset those panel-specific states so the restored board domino is fully usable.
+		found.is_interactive = true
+		found.set_panel_modulate(Color.WHITE)
+		found.mouse_collision.set_deferred("disabled", false)
 		if found.get_parent():
 			found.get_parent().remove_child(found)
 		assigned_dominos.add_child(found)
