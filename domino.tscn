@@ -10,6 +10,7 @@ shader_parameter/dots1_value = 6
 shader_parameter/dots2_value = 6
 shader_parameter/corner_radius = 0.150000007125
 shader_parameter/highlighted = false
+shader_parameter/custom_modulate = Color(1, 1, 1, 1)
 
 [sub_resource type="QuadMesh" id="QuadMesh_o246h"]
 size = Vector2(128, 64)
