@@ -1,6 +1,18 @@
 extends Node2D
 class_name Game
 
+## Game – main controller for a single puzzle session.
+##
+## Responsibilities:
+##  • Procedurally generates the tile grid using a snake-like path algorithm.
+##  • Assigns random dot values to tiles via FastNoiseLite sampling.
+##  • Pairs adjacent tiles into Dominoes and places them in the DominoPanel.
+##  • Generates non-overlapping Constraint groups on the grid.
+##  • Tracks game state (GENERATING → ACTIVE → FINISHED) and the elapsed timer.
+##  • Listens for domino_assigned / domino_unassigned signals and checks win
+##    conditions after every placement change.
+##  • Auto-saves progress to SaveManager on every meaningful placement change.
+
 enum GameState { GENERATING, ACTIVE, FINISHED }
 
 @export var MAP_SIZE := 30
@@ -13,9 +25,9 @@ var last_value := 0
 var config: GameConfig
 
 # Packed scenes — preload to avoid errors
-@export var tile_scene: PackedScene = preload("res://tile.tscn")
-@export var domino_scene: PackedScene = preload("res://domino.tscn")
-@export var constraint_scene: PackedScene = preload("res://constraint.tscn")
+@export var tile_scene: PackedScene = preload("res://scenes/tile.tscn")
+@export var domino_scene: PackedScene = preload("res://scenes/domino.tscn")
+@export var constraint_scene: PackedScene = preload("res://scenes/constraint.tscn")
 
 # Child nodes
 @onready var camera2d : Camera2D = $Camera2D
@@ -222,7 +234,7 @@ func _process(delta: float) -> void:
 	# Escape: return to main menu (only when the game is not generating)
 	if current_state != GameState.GENERATING and Input.is_action_just_pressed("ui_cancel"):
 		_auto_save()
-		get_tree().change_scene_to_file("res://main_menu.tscn")
+		get_tree().change_scene_to_file("res://scenes/main_menu.tscn")
 		return
 	
 	var camera_input = Vector2.ZERO

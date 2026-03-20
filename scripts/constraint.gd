@@ -1,6 +1,16 @@
 extends Node2D
 class_name Constraint
 
+## Constraint – a win condition applied to a group of adjacent Tiles.
+##
+## Each constraint covers 1–6 tiles and enforces one of five relationship types
+## (SUM, EQUAL, LESS_THAN, GREATER_THAN, NOT_EQUAL) on the player-placed dot
+## values.  The constraint is generated procedurally based on the tiles'
+## generated_values, then checked at runtime via is_constraint_satisfied().
+##
+## Visually, each constraint draws a coloured overlay across its tiles and an
+## indicator diamond (Polygon2D) that shows the type/target to the player.
+
 enum Type { SUM, EQUAL, LESS_THAN, GREATER_THAN, NOT_EQUAL }
 
 @export var type : Type = Type.SUM

@@ -1,10 +1,10 @@
 [gd_scene format=3 uid="uid://cidflaxqyhnen"]
 
-[ext_resource type="Script" uid="uid://ba7jsd4138l65" path="res://game.gd" id="1_80nbo"]
-[ext_resource type="FastNoiseLite" uid="uid://cdnr10focog76" path="res://dot_noise.tres" id="2_e2o6t"]
-[ext_resource type="PackedScene" uid="uid://u0dj7t4cpuib" path="res://domino_panel.tscn" id="3_qwf2d"]
-[ext_resource type="Script" uid="uid://cgmxf8o3nvkry" path="res://game_hud.gd" id="4_hud01"]
-[ext_resource type="Script" uid="uid://dg8qjbhva8lgl" path="res://gen_panel.gd" id="5_genpnl"]
+[ext_resource type="Script" uid="uid://ba7jsd4138l65" path="res://scripts/game.gd" id="1_80nbo"]
+[ext_resource type="FastNoiseLite" uid="uid://cdnr10focog76" path="res://resources/dot_noise.tres" id="2_e2o6t"]
+[ext_resource type="PackedScene" uid="uid://u0dj7t4cpuib" path="res://scenes/domino_panel.tscn" id="3_qwf2d"]
+[ext_resource type="Script" uid="uid://cgmxf8o3nvkry" path="res://scripts/game_hud.gd" id="4_hud01"]
+[ext_resource type="Script" uid="uid://dg8qjbhu98lgl" path="res://scripts/gen_panel.gd" id="5_genpnl"]
 
 [node name="Game" type="Node2D" unique_id=1647598395]
 script = ExtResource("1_80nbo")

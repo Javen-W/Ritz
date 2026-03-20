@@ -1,6 +1,18 @@
 extends Node2D
 class_name Domino
 
+## Domino – an interactive, draggable puzzle piece made up of two pip values.
+##
+## Each domino covers exactly two adjacent Tiles on the board.  The player
+## drags dominoes from the DominoPanel and drops them onto the grid; on
+## release the domino snaps to the nearest valid empty tile pair within
+## ASSIGN_SEARCH_RADIUS pixels.  Double-clicking a placed domino either
+## pivots it to a perpendicular adjacent pair or flips it 180° on the same
+## pair (swapping dots1 ↔ dots2 assignment).
+##
+## Rendering is handled by domino.gdshader (via ShaderMaterial) which draws
+## the rounded rectangle background and the pip dots for both sides.
+
 signal domino_released
 signal domino_picked
 

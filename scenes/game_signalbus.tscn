@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://b8t8b4t56gv8q"]
 
-[ext_resource type="Script" uid="uid://dblcir70o5soe" path="res://game_signalbus.gd" id="1_q6rwi"]
+[ext_resource type="Script" uid="uid://dblcir70o5soe" path="res://scripts/game_signalbus.gd" id="1_q6rwi"]
 
 [node name="GameSignalbus" type="Node"]
 script = ExtResource("1_q6rwi")

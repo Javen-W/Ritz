@@ -15,15 +15,15 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 [application]
 
 config/name="Ritz"
-run/main_scene="uid://c9asr5mkdp8gv"
+run/main_scene="res://scenes/main_menu.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")
-config/icon="res://icon.svg"
+config/icon="res://assets/icon.svg"
 
 [autoload]
 
-GameSignalbus="*res://game_signalbus.gd"
-SaveManager="*res://save_manager.gd"
-MusicManager="*res://music_manager.gd"
+GameSignalbus="*res://scripts/game_signalbus.gd"
+SaveManager="*res://scripts/save_manager.gd"
+MusicManager="*res://scripts/music_manager.gd"
 
 [display]
 
