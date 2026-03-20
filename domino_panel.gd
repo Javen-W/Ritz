@@ -232,7 +232,7 @@ func _layout_dominos() -> void:
 			domino.position = _slot_local_position(i - cur_start)
 			domino.scale = Vector2.ONE
 			domino.z_index = 10
-			domino.modulate = Color.WHITE
+			domino.set_panel_modulate(Color.WHITE)
 			domino.is_interactive = true
 			domino.mouse_collision.set_deferred("disabled", false)
 		elif total > 1 and i >= next_start and i < next_start + VISIBLE_COUNT:
@@ -241,7 +241,7 @@ func _layout_dominos() -> void:
 			domino.position = _slot_local_position(i - next_start) + PREVIEW_OFFSET
 			domino.scale = Vector2.ONE
 			domino.z_index = 5
-			domino.modulate = PREVIEW_MODULATE
+			domino.set_panel_modulate(PREVIEW_MODULATE)
 			domino.is_interactive = false
 			domino.mouse_collision.set_deferred("disabled", true)
 		else:

@@ -60,6 +60,10 @@ func set_highlighted(val: bool) -> void:
 	if shader_material:
 		shader_material.set_shader_parameter("highlighted", val)
 
+func set_panel_modulate(color: Color) -> void:
+	if shader_material:
+		shader_material.set_shader_parameter("custom_modulate", color)
+
 func rotate_once() -> void:
 	rotate(deg_to_rad(90.0)) # (Negative -> CCW).
 

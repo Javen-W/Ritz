@@ -10,6 +10,10 @@ uniform float corner_radius : hint_range(0.0, 0.4) = 0.08;
 // When true the domino is visually highlighted (selection indicator)
 uniform bool highlighted = false;
 
+// Colour multiplier applied to the final output (replaces node modulate, which is
+// not propagated automatically through a ShaderMaterial in the GL Compatibility renderer).
+uniform vec4 custom_modulate : source_color = vec4(1.0, 1.0, 1.0, 1.0);
+
 const float DOT_RADIUS = 0.075;
 const float BORDER_THICKNESS   = 0.035;   // inset from outer edge
 const float DIVIDER_HALF_WIDTH = 0.028;   // half-width of centre divider
@@ -130,9 +134,9 @@ void fragment() {
 		// Final colour with shape alpha for smooth outer edge
 		COLOR = vec4(col.rgb, shape);
 
-		// Apply the node's modulate (includes parent modulate, e.g. PREVIEW_MODULATE
-		// set by DominoPanel on preview-stack dominos).  Canvas-item ShaderMaterials
-		// do NOT apply MODULATE automatically — the shader must do it explicitly.
-		COLOR *= MODULATE;
+		// Apply the custom modulate (set via shader parameter by DominoPanel so that
+		// preview-stack dominos appear darkened/translucent in GL Compatibility where
+		// the MODULATE built-in is not available).
+		COLOR *= custom_modulate;
 	}
 }
