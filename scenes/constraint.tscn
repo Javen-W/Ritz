@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://bgrm7cqcm4rrl"]
 
-[ext_resource type="Script" uid="uid://doy2mbvfvnf8d" path="res://constraint.gd" id="1"]
+[ext_resource type="Script" uid="uid://doy2mbvfvnf8d" path="res://scripts/constraint.gd" id="1"]
 
 [node name="Constraint" type="Node2D"]
 z_index = 1

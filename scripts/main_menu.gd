@@ -25,8 +25,8 @@ const CAM_SPEED_MAX:   float = 32.0
 const CAM_RESET_DELAY: float = 18.0   # seconds between full resets
 
 # Preloaded scenes used for the background
-var _tile_scene:       PackedScene = preload("res://tile.tscn")
-var _constraint_scene: PackedScene = preload("res://constraint.tscn")
+var _tile_scene:       PackedScene = preload("res://scenes/tile.tscn")
+var _constraint_scene: PackedScene = preload("res://scenes/constraint.tscn")
 
 # Background world nodes
 var _bg_camera:      Camera2D
@@ -385,7 +385,7 @@ func _build_ui_layer() -> void:
 func _on_play_pressed() -> void:
 	_bg_stop = true
 	print("MainMenu: Transitioning to game scene")
-	get_tree().change_scene_to_file("res://game.tscn")
+	get_tree().change_scene_to_file("res://scenes/game.tscn")
 
 
 func _on_options_pressed() -> void:

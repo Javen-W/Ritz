@@ -1,6 +1,14 @@
 extends CanvasLayer
 class_name GenPanel
 
+## GenPanel – in-game panel for tweaking and re-generating the puzzle.
+##
+## Provides SpinBox / OptionButton controls for every GameConfig parameter,
+## grouped into sections (Core, Sampling, Noise, Constraint sizing, Constraint
+## type probabilities).  "Generate" starts a new game with the chosen config;
+## "Reset" unassigns all placed dominoes without regenerating the grid.
+## The panel is toggled via a "⚙" button in the top-right corner of the HUD.
+
 const PANEL_WIDTH    := 340
 const LABEL_MIN_W    := 110
 const SECTION_COLOR  := Color(0.55, 0.78, 1.0, 1.0)
@@ -281,6 +289,10 @@ func _row(label_text: String, ctrl: Control) -> HBoxContainer:
 	return hbox
 
 # Returns [slider, value_label, container_hbox]
+## Build a labelled HSlider row and return it as [slider, value_label, hbox_container].
+## Index 0 = HSlider (read .value to get current setting).
+## Index 1 = Label that displays the current value as "%.2f".
+## Index 2 = HBoxContainer – add this to the parent layout.
 func _slider_row(label_text: String, min_v: float, max_v: float, default_v: float) -> Array:
 	var slider := HSlider.new()
 	slider.min_value = min_v
