@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://cq6vsriskmcnv"
+path="res://.godot/imported/Classicals.de - Bach - The Well-Tempered Clavier, Book 1 - 02 - Fugue No. 1 in C major, BWV 846 (Kimiko Ishizaka).mp3-f391c79fe2ceb518d7c98105c15ea516.mp3str"
+
+[deps]
+
+source_file="res://assets/music/Classicals.de - Bach - The Well-Tempered Clavier, Book 1 - 02 - Fugue No. 1 in C major, BWV 846 (Kimiko Ishizaka).mp3"
+dest_files=["res://.godot/imported/Classicals.de - Bach - The Well-Tempered Clavier, Book 1 - 02 - Fugue No. 1 in C major, BWV 846 (Kimiko Ishizaka).mp3-f391c79fe2ceb518d7c98105c15ea516.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4
