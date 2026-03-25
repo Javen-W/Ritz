@@ -12,6 +12,7 @@
 - [Technical Overview](#technical-overview)
 - [Setup & Build](#setup--build)
 - [Project Structure](#project-structure)
+- [Credits](#credits)
 - [License](#license)
 
 ---
@@ -112,6 +113,10 @@ Progress is automatically saved after every domino placement and reset. When you
 - VSync toggle
 - Music volume
 - Settings are persisted between sessions in `user://options.json`
+
+### Background Music
+
+Classical piano pieces from J.S. Bach's *The Well-Tempered Clavier* play continuously as background music. Tracks are drawn from a shuffled, endless queue (no immediate repeats). A brief "Now Playing" notification fades in at the top of the screen when each new track begins.
 
 ### Animated Generation
 
@@ -234,6 +239,15 @@ Ritz/
 ├── main_menu.gd / .tscn       # Main menu
 └── options_menu.gd            # Options menu
 ```
+---
+
+## Credits
+
+Background music is provided by **[Classicals.de](https://www.classicals.de/)** — royalty-free classical recordings released under the **Creative Commons Public Domain Mark 1.0**.
+All tracks are from *J.S. Bach – The Well-Tempered Clavier, Book 1*, performed by **Kimiko Ishizaka**.
+
+See [CREDITS.md](CREDITS.md) for the full track listing.
+
 ---
 
 ## License

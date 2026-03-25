@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://40c8082a12976"
+path="res://.godot/imported/Classicals.de - Bach - The Well-Tempered Clavier, Book 1 - 17 - Prelude No. 9 in E major, BWV 854 (Kimiko Ishizaka).mp3-b40ba9590b5b4e2743cc2e57321b220a.mp3str"
+
+[deps]
+
+source_file="res://assets/music/Classicals.de - Bach - The Well-Tempered Clavier, Book 1 - 17 - Prelude No. 9 in E major, BWV 854 (Kimiko Ishizaka).mp3"
+dest_files=["res://.godot/imported/Classicals.de - Bach - The Well-Tempered Clavier, Book 1 - 17 - Prelude No. 9 in E major, BWV 854 (Kimiko Ishizaka).mp3-b40ba9590b5b4e2743cc2e57321b220a.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

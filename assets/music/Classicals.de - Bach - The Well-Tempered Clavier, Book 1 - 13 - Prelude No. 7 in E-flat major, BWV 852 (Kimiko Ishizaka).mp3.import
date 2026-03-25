@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://e9a7c4bdc2c0c"
+path="res://.godot/imported/Classicals.de - Bach - The Well-Tempered Clavier, Book 1 - 13 - Prelude No. 7 in E-flat major, BWV 852 (Kimiko Ishizaka).mp3-7fd6e1fe6b3e2df51ec0295bfe17d725.mp3str"
+
+[deps]
+
+source_file="res://assets/music/Classicals.de - Bach - The Well-Tempered Clavier, Book 1 - 13 - Prelude No. 7 in E-flat major, BWV 852 (Kimiko Ishizaka).mp3"
+dest_files=["res://.godot/imported/Classicals.de - Bach - The Well-Tempered Clavier, Book 1 - 13 - Prelude No. 7 in E-flat major, BWV 852 (Kimiko Ishizaka).mp3-7fd6e1fe6b3e2df51ec0295bfe17d725.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4
