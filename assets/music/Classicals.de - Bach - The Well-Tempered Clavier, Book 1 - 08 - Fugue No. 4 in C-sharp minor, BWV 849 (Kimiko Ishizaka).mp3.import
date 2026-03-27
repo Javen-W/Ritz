@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://bhoiq3ctktekg"
+path="res://.godot/imported/Classicals.de - Bach - The Well-Tempered Clavier, Book 1 - 08 - Fugue No. 4 in C-sharp minor, BWV 849 (Kimiko Ishizaka).mp3-4fc9cfcad8fc89a1c69993e544a54d5f.mp3str"
+
+[deps]
+
+source_file="res://assets/music/Classicals.de - Bach - The Well-Tempered Clavier, Book 1 - 08 - Fugue No. 4 in C-sharp minor, BWV 849 (Kimiko Ishizaka).mp3"
+dest_files=["res://.godot/imported/Classicals.de - Bach - The Well-Tempered Clavier, Book 1 - 08 - Fugue No. 4 in C-sharp minor, BWV 849 (Kimiko Ishizaka).mp3-4fc9cfcad8fc89a1c69993e544a54d5f.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://d3e33ylhcm8ts"
+path="res://.godot/imported/Classicals.de - Bach - The Well-Tempered Clavier, Book 1 - 22 - Fugue No. 11 in F major, BWV 856 (Kimiko Ishizaka).mp3-f84b8b1b55eb84e4c625c31f79efb766.mp3str"
+
+[deps]
+
+source_file="res://assets/music/Classicals.de - Bach - The Well-Tempered Clavier, Book 1 - 22 - Fugue No. 11 in F major, BWV 856 (Kimiko Ishizaka).mp3"
+dest_files=["res://.godot/imported/Classicals.de - Bach - The Well-Tempered Clavier, Book 1 - 22 - Fugue No. 11 in F major, BWV 856 (Kimiko Ishizaka).mp3-f84b8b1b55eb84e4c625c31f79efb766.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4
