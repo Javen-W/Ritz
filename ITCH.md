@@ -59,6 +59,7 @@ Constraints are generated from the actual tile values, so **every puzzle is alwa
 - 🧩 **Five constraint types** — SUM, EQUAL, NOT EQUAL, LESS THAN, and GREATER THAN keep every board feeling different.
 - 💾 **Auto-save & resume** — progress is saved automatically after every placement. Pick up exactly where you left off, including your elapsed time.
 - ⚙️ **Generation panel** — tweak the seed, grid size, domino count, noise parameters, and constraint probabilities at runtime to craft your own challenge.
+- 🎵 **Classical background music** — a shuffled, endless queue of Bach's *Well-Tempered Clavier* (performed by Kimiko Ishizaka) plays as you solve puzzles. A "Now Playing" notification fades in at the top of the screen when each new piece begins.
 - 🎬 **Animated board generation** — watch the board build itself tile by tile when a new game starts.
 - 🖥️ **Resolution & display options** — choose from preset resolutions (1280×720 to 2560×1440), toggle fullscreen, and control V-Sync and music volume.
 
