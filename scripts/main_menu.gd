@@ -320,7 +320,8 @@ func _build_ui_layer() -> void:
 
 	# Options button
 	var options_btn := Button.new()
-	options_btn.text = "⚙  Options"
+	options_btn.text = "Options"
+	options_btn.icon = load("res://assets/icons/icon_gear.svg")
 	options_btn.focus_mode = Control.FOCUS_NONE
 	options_btn.custom_minimum_size = Vector2(240, 44)
 	options_btn.add_theme_font_size_override("font_size", 18)

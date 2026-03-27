@@ -7,7 +7,7 @@ class_name GenPanel
 ## grouped into sections (Core, Sampling, Noise, Constraint sizing, Constraint
 ## type probabilities).  "Generate" starts a new game with the chosen config;
 ## "Reset" unassigns all placed dominoes without regenerating the grid.
-## The panel is toggled via a "⚙" button in the top-right corner of the HUD.
+## The panel is toggled via a gear-icon button in the top-right corner of the HUD.
 
 const PANEL_WIDTH    := 340
 const LABEL_MIN_W    := 110
@@ -86,13 +86,22 @@ func _build_ui() -> void:
 	outer.add_theme_constant_override("separation", 8)
 	margin.add_child(outer)
 
-	# Title
+	# Title — icon + label row, centred horizontally
+	var title_row := HBoxContainer.new()
+	title_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	title_row.add_theme_constant_override("separation", 6)
+	title_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var title_icon := TextureRect.new()
+	title_icon.texture = load("res://assets/icons/icon_gear.svg")
+	title_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	title_icon.custom_minimum_size = Vector2(18, 18)
+	title_row.add_child(title_icon)
 	var title := Label.new()
-	title.text = "⚙  Generation Config"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.text = "Generation Config"
 	title.add_theme_font_size_override("font_size", 15)
 	title.add_theme_color_override("font_color", Color.WHITE)
-	outer.add_child(title)
+	title_row.add_child(title)
+	outer.add_child(title_row)
 	outer.add_child(HSeparator.new())
 
 	# Scrollable content
@@ -218,7 +227,8 @@ func _build_ui() -> void:
 	util_row.add_child(reset_defaults_btn)
 
 	var copy_btn := Button.new()
-	copy_btn.text = "📋 Copy"
+	copy_btn.text = "Copy"
+	copy_btn.icon = load("res://assets/icons/icon_copy.svg")
 	copy_btn.focus_mode = Control.FOCUS_NONE
 	copy_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	copy_btn.add_theme_font_size_override("font_size", 11)
@@ -227,7 +237,8 @@ func _build_ui() -> void:
 	util_row.add_child(copy_btn)
 
 	var gen_btn := Button.new()
-	gen_btn.text = "🎲  Generate"
+	gen_btn.text = "Generate"
+	gen_btn.icon = load("res://assets/icons/icon_dice.svg")
 	gen_btn.focus_mode = Control.FOCUS_NONE
 	gen_btn.add_theme_font_size_override("font_size", 15)
 	gen_btn.custom_minimum_size = Vector2(0, 42)

@@ -76,7 +76,8 @@ func _ready() -> void:
 	MusicManager.setup_button(reset_btn)
 
 	var shuffle_btn := Button.new()
-	shuffle_btn.text = "⇄ Shuffle"
+	shuffle_btn.text = "Shuffle"
+	shuffle_btn.icon = load("res://assets/icons/icon_shuffle.svg")
 	shuffle_btn.focus_mode = Control.FOCUS_NONE
 	_button_container.add_child(shuffle_btn)
 	shuffle_btn.pressed.connect(_on_shuffle_button_pressed)

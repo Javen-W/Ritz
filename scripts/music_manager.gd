@@ -131,7 +131,6 @@ var _np_overflow:      float = 0.0     # how many pixels the label overflows the
 
 
 func _ready() -> void:
-	# _setup_emoji_font()
 	var opts := SaveManager.load_options()
 	if opts.has("bgm_volume_db"):
 		bgm_volume_db = float(opts["bgm_volume_db"])
@@ -144,33 +143,6 @@ func _ready() -> void:
 	if opts.has("master_volume_db"):
 		AudioServer.set_bus_volume_db(
 			AudioServer.get_bus_index("Master"), float(opts["master_volume_db"]))
-
-
-# ── Emoji / symbol font ───────────────────────────────────────────────────────
-
-## Register a TrueType outline symbol font as a global fallback so that the
-## characters used in UI Labels (🎉 📋 🎲 ⚙ ♪ ✕) render on every platform,
-## including the itch.io web export where Godot cannot use system emoji fonts.
-##
-## Uses a Symbola-derived subset (standard glyf outlines, no color bitmaps) so
-## it works correctly with Godot 4's GL Compatibility renderer on the web.
-func _setup_emoji_font() -> void:
-	const EMOJI_PATH := "res://assets/fonts/Symbola.ttf"
-	if not FileAccess.file_exists(EMOJI_PATH):
-		push_warning("MusicManager: symbol font not found at %s" % EMOJI_PATH)
-		return
-	var sym_font := FontFile.new()
-	sym_font.set_data(FileAccess.get_file_as_bytes(EMOJI_PATH))
-	# Chain: label font → label font fallbacks → ThemeDB.fallback_font → its fallbacks.
-	# We append sym_font to the engine fallback's fallbacks so it is tried last,
-	# only for glyphs absent from every other font in the chain.
-	var base := ThemeDB.fallback_font
-	if base == null:
-		push_warning("MusicManager: ThemeDB has no fallback font; symbol font not registered")
-		return
-	var fbs: Array[Font] = base.fallbacks
-	fbs.append(sym_font)
-	base.fallbacks = fbs
 
 
 # ── BGM ──────────────────────────────────────────────────────────────────────

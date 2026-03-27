@@ -66,13 +66,22 @@ func _build_ui() -> void:
 	outer.add_theme_constant_override("separation", 12)
 	margin.add_child(outer)
 
-	# Title
+	# Title — icon + label row, centred horizontally
+	var title_row := HBoxContainer.new()
+	title_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	title_row.add_theme_constant_override("separation", 6)
+	title_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var title_icon := TextureRect.new()
+	title_icon.texture = load("res://assets/icons/icon_gear.svg")
+	title_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	title_icon.custom_minimum_size = Vector2(20, 20)
+	title_row.add_child(title_icon)
 	var title := Label.new()
-	title.text = "⚙  Options"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.text = "Options"
 	title.add_theme_font_size_override("font_size", TITLE_FONT_SIZE)
 	title.add_theme_color_override("font_color", Color.WHITE)
-	outer.add_child(title)
+	title_row.add_child(title)
+	outer.add_child(title_row)
 	outer.add_child(HSeparator.new())
 
 	# ── Audio ────────────────────────────────────────────────────────────────
