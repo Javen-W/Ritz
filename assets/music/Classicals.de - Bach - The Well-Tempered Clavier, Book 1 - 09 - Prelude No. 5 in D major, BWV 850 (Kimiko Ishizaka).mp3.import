@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://c8d37133d4c24"
+path="res://.godot/imported/Classicals.de - Bach - The Well-Tempered Clavier, Book 1 - 09 - Prelude No. 5 in D major, BWV 850 (Kimiko Ishizaka).mp3-841b0b87c256e4abf6f1be908ddc8620.mp3str"
+
+[deps]
+
+source_file="res://assets/music/Classicals.de - Bach - The Well-Tempered Clavier, Book 1 - 09 - Prelude No. 5 in D major, BWV 850 (Kimiko Ishizaka).mp3"
+dest_files=["res://.godot/imported/Classicals.de - Bach - The Well-Tempered Clavier, Book 1 - 09 - Prelude No. 5 in D major, BWV 850 (Kimiko Ishizaka).mp3-841b0b87c256e4abf6f1be908ddc8620.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

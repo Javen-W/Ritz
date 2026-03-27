@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://3f0227abac8f"
+path="res://.godot/imported/Classicals.de - Bach - The Well-Tempered Clavier, Book 1 - 16 - Fugue No. 8 in D-sharp minor, BWV 853 (Kimiko Ishizaka).mp3-a16cdf17ebfa36f4f9adcff41db6b65d.mp3str"
+
+[deps]
+
+source_file="res://assets/music/Classicals.de - Bach - The Well-Tempered Clavier, Book 1 - 16 - Fugue No. 8 in D-sharp minor, BWV 853 (Kimiko Ishizaka).mp3"
+dest_files=["res://.godot/imported/Classicals.de - Bach - The Well-Tempered Clavier, Book 1 - 16 - Fugue No. 8 in D-sharp minor, BWV 853 (Kimiko Ishizaka).mp3-a16cdf17ebfa36f4f9adcff41db6b65d.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4
