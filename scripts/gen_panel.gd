@@ -95,9 +95,12 @@ func _build_ui() -> void:
 	title_icon.texture = load("res://assets/icons/icon_gear.svg")
 	title_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	title_icon.custom_minimum_size = Vector2(18, 18)
+	title_icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	title_icon.size_flags_vertical   = Control.SIZE_SHRINK_CENTER
 	title_row.add_child(title_icon)
 	var title := Label.new()
 	title.text = "Generation Config"
+	title.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	title.add_theme_font_size_override("font_size", 15)
 	title.add_theme_color_override("font_color", Color.WHITE)
 	title_row.add_child(title)
@@ -218,7 +221,9 @@ func _build_ui() -> void:
 	outer.add_child(util_row)
 
 	var reset_defaults_btn := Button.new()
-	reset_defaults_btn.text = "↺ Defaults"
+	reset_defaults_btn.text = "Defaults"
+	reset_defaults_btn.icon = load("res://assets/icons/icon_reset.svg")
+	reset_defaults_btn.add_theme_constant_override("icon_max_width", 12)
 	reset_defaults_btn.focus_mode = Control.FOCUS_NONE
 	reset_defaults_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	reset_defaults_btn.add_theme_font_size_override("font_size", 11)
@@ -229,6 +234,7 @@ func _build_ui() -> void:
 	var copy_btn := Button.new()
 	copy_btn.text = "Copy"
 	copy_btn.icon = load("res://assets/icons/icon_copy.svg")
+	copy_btn.add_theme_constant_override("icon_max_width", 12)
 	copy_btn.focus_mode = Control.FOCUS_NONE
 	copy_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	copy_btn.add_theme_font_size_override("font_size", 11)
@@ -239,6 +245,7 @@ func _build_ui() -> void:
 	var gen_btn := Button.new()
 	gen_btn.text = "Generate"
 	gen_btn.icon = load("res://assets/icons/icon_dice.svg")
+	gen_btn.add_theme_constant_override("icon_max_width", 15)
 	gen_btn.focus_mode = Control.FOCUS_NONE
 	gen_btn.add_theme_font_size_override("font_size", 15)
 	gen_btn.custom_minimum_size = Vector2(0, 42)

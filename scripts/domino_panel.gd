@@ -69,7 +69,9 @@ func _ready() -> void:
 	_update_pagination_ui()
 
 	var reset_btn := Button.new()
-	reset_btn.text = "↺ Reset"
+	reset_btn.text = "Reset"
+	reset_btn.icon = load("res://assets/icons/icon_reset.svg")
+	reset_btn.add_theme_constant_override("icon_max_width", 14)
 	reset_btn.focus_mode = Control.FOCUS_NONE
 	_button_container.add_child(reset_btn)
 	reset_btn.pressed.connect(_on_reset_button_pressed)
@@ -78,6 +80,7 @@ func _ready() -> void:
 	var shuffle_btn := Button.new()
 	shuffle_btn.text = "Shuffle"
 	shuffle_btn.icon = load("res://assets/icons/icon_shuffle.svg")
+	shuffle_btn.add_theme_constant_override("icon_max_width", 14)
 	shuffle_btn.focus_mode = Control.FOCUS_NONE
 	_button_container.add_child(shuffle_btn)
 	shuffle_btn.pressed.connect(_on_shuffle_button_pressed)

@@ -75,9 +75,12 @@ func _build_ui() -> void:
 	title_icon.texture = load("res://assets/icons/icon_gear.svg")
 	title_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	title_icon.custom_minimum_size = Vector2(20, 20)
+	title_icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	title_icon.size_flags_vertical   = Control.SIZE_SHRINK_CENTER
 	title_row.add_child(title_icon)
 	var title := Label.new()
 	title.text = "Options"
+	title.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	title.add_theme_font_size_override("font_size", TITLE_FONT_SIZE)
 	title.add_theme_color_override("font_color", Color.WHITE)
 	title_row.add_child(title)
@@ -168,7 +171,9 @@ func _build_ui() -> void:
 	# ── Back button ──────────────────────────────────────────────────────────
 	outer.add_child(HSeparator.new())
 	var back_btn := Button.new()
-	back_btn.text = "✕  Close"
+	back_btn.text = "Close"
+	back_btn.icon = load("res://assets/icons/icon_close.svg")
+	back_btn.add_theme_constant_override("icon_max_width", 14)
 	back_btn.focus_mode = Control.FOCUS_NONE
 	back_btn.custom_minimum_size = Vector2(0, 38)
 	back_btn.pressed.connect(hide_options)

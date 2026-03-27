@@ -107,6 +107,7 @@ var sfx_volume_db: float = -14.0
 
 const NP_MAX_WIDTH:     float = 480.0   # maximum width of the notification panel
 const NP_FONT_SIZE:     int   = 14
+const NP_ICON_SIZE:     float = 14.0    # music-note icon size; matches NP_FONT_SIZE
 const NP_FADE_DURATION: float = 0.7     # seconds for each fade in/out
 const NP_HOLD_DURATION: float = 5.5     # seconds the notification stays fully visible
 const NP_SCROLL_SPEED:  float = 45.0    # pixels per second for long-title scrolling
@@ -117,6 +118,7 @@ const NP_CANVAS_LAYER:  int   = 150     # above game UI (10) but below options m
 # Node references for the "Now Playing" overlay
 var _np_layer:         CanvasLayer
 var _np_panel:         PanelContainer
+var _np_icon:          TextureRect       # fixed music-note icon (does not scroll)
 var _np_clip:          Control           # clipping container for the label
 var _np_label:         Label
 
@@ -318,11 +320,25 @@ func _setup_now_playing_ui() -> void:
 	_np_panel.modulate.a = 0.0   # start invisible
 	_np_layer.add_child(_np_panel)
 
+	# Row: [fixed music icon] [scrolling label inside clip]
+	var np_hbox := HBoxContainer.new()
+	np_hbox.add_theme_constant_override("separation", 4)
+	_np_panel.add_child(np_hbox)
+
+	# Music note icon — always visible, never scrolls
+	_np_icon = TextureRect.new()
+	_np_icon.texture = load("res://assets/icons/icon_music.svg")
+	_np_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_np_icon.custom_minimum_size = Vector2(NP_ICON_SIZE, NP_ICON_SIZE)
+	_np_icon.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	_np_icon.size_flags_vertical   = Control.SIZE_SHRINK_CENTER
+	np_hbox.add_child(_np_icon)
+
 	# Clipping container: caps the width for long titles
 	_np_clip = Control.new()
 	_np_clip.clip_children = CanvasItem.CLIP_CHILDREN_ONLY
 	_np_clip.custom_minimum_size = Vector2(0.0, 0.0)
-	_np_panel.add_child(_np_clip)
+	np_hbox.add_child(_np_clip)
 
 	# Label: the actual "Now Playing: …" text
 	_np_label = Label.new()
@@ -334,7 +350,7 @@ func _setup_now_playing_ui() -> void:
 
 ## Display the "Now Playing" notification for the given song title.
 func _show_now_playing(title: String) -> void:
-	_np_label.text = "♪  Now Playing: %s" % title
+	_np_label.text = "Now Playing: %s" % title
 
 	# Wait one frame for the label to compute its size, then position the panel.
 	await get_tree().process_frame
@@ -369,14 +385,16 @@ func _position_now_playing_panel() -> void:
 	var vp_size  := get_viewport().get_visible_rect().size if get_viewport() else Vector2(1280.0, 720.0)
 	_np_label_width = _np_label.get_minimum_size().x
 
-	# Clip width: the label's natural width capped at NP_MAX_WIDTH
-	var clip_w := minf(_np_label_width, NP_MAX_WIDTH)
-	_np_overflow = maxf(_np_label_width - NP_MAX_WIDTH, 0.0)
+	# Clip width: label capped at NP_MAX_WIDTH minus the fixed icon+separator space
+	var icon_total := NP_ICON_SIZE + 4.0   # icon width + hbox separation constant
+	var max_label_w := NP_MAX_WIDTH - icon_total
+	var clip_w := minf(_np_label_width, max_label_w)
+	_np_overflow = maxf(_np_label_width - max_label_w, 0.0)
 
 	_np_clip.custom_minimum_size = Vector2(clip_w, _np_label.get_minimum_size().y)
 	_np_clip.size                = _np_clip.custom_minimum_size
 
-	# Force panel to reflow (it wraps _np_clip)
+	# Force panel to reflow (it wraps the hbox which contains icon + clip)
 	_np_panel.reset_size()
 
 	# Centre horizontally, 12 px from top
