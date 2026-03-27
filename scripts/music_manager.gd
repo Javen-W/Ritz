@@ -84,9 +84,12 @@ const SONGS: Array = [
 ]
 
 # ── BGM state ────────────────────────────────────────────────────────────────
+const BGM_MAX_SKIP: int = 5   # max consecutive failed loads before giving up
+
 var _bgm_player:      AudioStreamPlayer
 var _bgm_queue:       Array[int] = []     # shuffled indices into SONGS
 var _bgm_last_played: int        = -1     # prevents immediate repeat on reshuffle
+var _bgm_streams:     Array      = []     # preloaded AudioStream for each SONGS entry
 
 # ── SFX players ──────────────────────────────────────────────────────────────
 var _sfx_hover_player: AudioStreamPlayer
@@ -108,7 +111,6 @@ const NP_SCROLL_SPEED:  float = 45.0    # pixels per second for long-title scrol
 const NP_SCROLL_PAUSE:  float = 1.2     # pause at each end of the scroll cycle
 const NP_TOP_MARGIN:    float = 12.0    # distance from top of viewport
 const NP_CANVAS_LAYER:  int   = 150     # above game UI (10) but below options menu (200)
-const NP_MAX_SKIP:      int   = 5       # max consecutive failed loads before giving up
 
 # Node references for the "Now Playing" overlay
 var _np_layer:         CanvasLayer
@@ -144,6 +146,15 @@ func _ready() -> void:
 # ── BGM ──────────────────────────────────────────────────────────────────────
 
 func _setup_bgm() -> void:
+	# Preload all audio streams once so there are no per-track load stalls during play
+	# (important for web/HTML5 builds where synchronous disk I/O is unavailable).
+	_bgm_streams.resize(SONGS.size())
+	for i in range(SONGS.size()):
+		var stream = load(SONGS[i]["path"])
+		if stream == null:
+			push_warning("MusicManager: Failed to preload '%s'" % SONGS[i]["path"])
+		_bgm_streams[i] = stream
+
 	_bgm_player = AudioStreamPlayer.new()
 	_bgm_player.volume_db = bgm_volume_db
 	_bgm_player.bus = "Master"
@@ -167,20 +178,21 @@ func _advance_queue(skip_count: int = 0) -> void:
 	if _bgm_queue.is_empty():
 		_build_queue()
 	var idx: int = _bgm_queue.pop_front()
-	_bgm_last_played = idx
 	var song: Dictionary = SONGS[idx]
-	_play_song(song["path"], song["title"], skip_count)
+	_play_song(idx, song["path"], song["title"], skip_count)
 
 
-func _play_song(path: String, title: String, skip_count: int = 0) -> void:
-	var stream = load(path)
+func _play_song(idx: int, path: String, title: String, skip_count: int = 0) -> void:
+	var stream = _bgm_streams[idx]
 	if stream == null:
-		push_warning("MusicManager: Could not load song '%s' — skipping" % path)
-		if skip_count < NP_MAX_SKIP:
+		push_warning("MusicManager: Preloaded stream missing for '%s' — skipping" % path)
+		if skip_count < BGM_MAX_SKIP:
 			_advance_queue(skip_count + 1)
 		else:
 			push_error("MusicManager: Too many consecutive load failures — giving up")
 		return
+	# Only record this as the last-played track after confirming the stream is valid.
+	_bgm_last_played = idx
 	_bgm_player.stream = stream
 	_bgm_player.play()
 	print("MusicManager: Now playing — %s" % title)
