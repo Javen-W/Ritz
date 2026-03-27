@@ -131,6 +131,7 @@ var _np_overflow:      float = 0.0     # how many pixels the label overflows the
 
 
 func _ready() -> void:
+	_setup_emoji_font()
 	var opts := SaveManager.load_options()
 	if opts.has("bgm_volume_db"):
 		bgm_volume_db = float(opts["bgm_volume_db"])
@@ -143,6 +144,29 @@ func _ready() -> void:
 	if opts.has("master_volume_db"):
 		AudioServer.set_bus_volume_db(
 			AudioServer.get_bus_index("Master"), float(opts["master_volume_db"]))
+
+
+# ── Emoji font ────────────────────────────────────────────────────────────────
+
+## Register a subset emoji font as a global fallback so that emoji characters
+## (🎉 📋 🎲 ⚙) render correctly in all Labels on every platform, including
+## the itch.io web export where Godot cannot fall back to a system emoji font.
+func _setup_emoji_font() -> void:
+	const EMOJI_PATH := "res://assets/fonts/NotoColorEmoji.ttf"
+	if not FileAccess.file_exists(EMOJI_PATH):
+		push_warning("MusicManager: emoji font not found at %s" % EMOJI_PATH)
+		return
+	var emoji_font := FontFile.new()
+	emoji_font.set_data(FileAccess.get_file_as_bytes(EMOJI_PATH))
+	# Append to the engine's fallback font so emoji glyphs are tried last,
+	# after the primary font fails to find a glyph.
+	var base := ThemeDB.fallback_font
+	if base:
+		var fbs: Array[Font] = base.fallbacks
+		fbs.append(emoji_font)
+		base.fallbacks = fbs
+	else:
+		ThemeDB.fallback_font = emoji_font
 
 
 # ── BGM ──────────────────────────────────────────────────────────────────────
