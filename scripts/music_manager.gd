@@ -93,8 +93,8 @@ var _sfx_hover_player: AudioStreamPlayer
 var _sfx_click_player: AudioStreamPlayer
 
 # ── Volume settings (dB) ─────────────────────────────────────────────────────
-var bgm_volume_db: float = -14.0
-var sfx_volume_db: float = -4.0
+var bgm_volume_db: float = -6.0
+var sfx_volume_db: float = -14.0
 
 # ── "Now Playing" notification ────────────────────────────────────────────────
 # Semi-translucent beige panel that fades in/out at the top of the screen.
