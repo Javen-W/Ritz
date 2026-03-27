@@ -131,7 +131,7 @@ var _np_overflow:      float = 0.0     # how many pixels the label overflows the
 
 
 func _ready() -> void:
-	_setup_emoji_font()
+	# _setup_emoji_font()
 	var opts := SaveManager.load_options()
 	if opts.has("bgm_volume_db"):
 		bgm_volume_db = float(opts["bgm_volume_db"])
