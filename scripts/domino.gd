@@ -289,6 +289,7 @@ func _try_assign_to_nearest_tiles() -> bool:
 
 func _on_domino_picked() -> void:
 	is_picked = true
+	MusicManager.play_sfx_domino_pick()
 
 	# If this domino is placed on the board, immediately unassign it and
 	# convert it back to a panel domino so it returns to the panel on drop.
@@ -311,6 +312,7 @@ func _on_domino_picked() -> void:
 
 func _on_domino_released() -> void:
 	is_picked = false
+	MusicManager.play_sfx_domino_drop()
 	if not _try_assign_to_nearest_tiles():
 		if is_from_panel:
 			_return_to_panel()

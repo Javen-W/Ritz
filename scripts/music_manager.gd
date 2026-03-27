@@ -92,8 +92,10 @@ var _bgm_last_played: int        = -1     # prevents immediate repeat on reshuff
 var _bgm_streams:     Array      = []     # preloaded AudioStream for each SONGS entry
 
 # ── SFX players ──────────────────────────────────────────────────────────────
-var _sfx_hover_player: AudioStreamPlayer
-var _sfx_click_player: AudioStreamPlayer
+var _sfx_hover_player:       AudioStreamPlayer
+var _sfx_click_player:       AudioStreamPlayer
+var _sfx_domino_pick_player: AudioStreamPlayer
+var _sfx_domino_drop_player: AudioStreamPlayer
 
 # ── Volume settings (dB) ─────────────────────────────────────────────────────
 var bgm_volume_db: float = -6.0
@@ -235,6 +237,18 @@ func _setup_sfx() -> void:
 	_sfx_click_player.stream = _make_beep_wav(440.0, 0.10)
 	add_child(_sfx_click_player)
 
+	# Domino pick-up: bright mid-range pluck (distinct from button hover/click)
+	_sfx_domino_pick_player = AudioStreamPlayer.new()
+	_sfx_domino_pick_player.volume_db = sfx_volume_db
+	_sfx_domino_pick_player.stream = _make_beep_wav(660.0, 0.07)
+	add_child(_sfx_domino_pick_player)
+
+	# Domino drop/place: lower, slightly longer thud
+	_sfx_domino_drop_player = AudioStreamPlayer.new()
+	_sfx_domino_drop_player.volume_db = sfx_volume_db
+	_sfx_domino_drop_player.stream = _make_beep_wav(330.0, 0.12)
+	add_child(_sfx_domino_drop_player)
+
 
 ## Generate a short sine-wave beep as an AudioStreamWAV.
 func _make_beep_wav(freq: float, duration: float) -> AudioStreamWAV:
@@ -260,6 +274,8 @@ func set_sfx_volume(db: float) -> void:
 	sfx_volume_db = db
 	_sfx_hover_player.volume_db = db
 	_sfx_click_player.volume_db = db
+	_sfx_domino_pick_player.volume_db = db
+	_sfx_domino_drop_player.volume_db = db
 
 
 func play_sfx_hover() -> void:
@@ -270,6 +286,16 @@ func play_sfx_hover() -> void:
 func play_sfx_click() -> void:
 	if _sfx_click_player and _sfx_click_player.stream:
 		_sfx_click_player.play()
+
+
+func play_sfx_domino_pick() -> void:
+	if _sfx_domino_pick_player and _sfx_domino_pick_player.stream:
+		_sfx_domino_pick_player.play()
+
+
+func play_sfx_domino_drop() -> void:
+	if _sfx_domino_drop_player and _sfx_domino_drop_player.stream:
+		_sfx_domino_drop_player.play()
 
 
 # ── "Now Playing" notification ────────────────────────────────────────────────
