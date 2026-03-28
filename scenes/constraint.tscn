@@ -1,12 +1,12 @@
-[gd_scene load_steps=2 format=3 uid="uid://bgrm7cqcm4rrl"]
+[gd_scene format=3 uid="uid://bgrm7cqcm4rrl"]
 
 [ext_resource type="Script" uid="uid://doy2mbvfvnf8d" path="res://scripts/constraint.gd" id="1"]
 
-[node name="Constraint" type="Node2D"]
+[node name="Constraint" type="Node2D" unique_id=1357148908]
 z_index = 1
 script = ExtResource("1")
 
-[node name="Indicator" type="Polygon2D" parent="."]
+[node name="Indicator" type="Polygon2D" parent="." unique_id=510990783]
 top_level = true
 z_index = 6
 position = Vector2(40, 40)
@@ -15,22 +15,20 @@ scale = Vector2(0.85, 0.85)
 offset = Vector2(-20, -20)
 polygon = PackedVector2Array(0, 0, 40, 0, 40, 40, 0, 40)
 
-[node name="Label" type="Label" parent="Indicator"]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
+[node name="Label" type="Label" parent="Indicator" unique_id=480691043]
 offset_left = -29.116158
-offset_top = -0.83189034
+offset_top = -0.83188987
 offset_right = 10.883842
 offset_bottom = 39.16811
-grow_horizontal = 2
-grow_vertical = 2
 rotation = -0.7853982
 size_flags_horizontal = 3
 size_flags_vertical = 6
 theme_override_colors/font_color = Color(0.06469653, 0.06469653, 0.06469653, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 10
+theme_override_constants/shadow_offset_y = 10
 theme_override_constants/outline_size = 1
-theme_override_font_sizes/font_size = 25
+theme_override_font_sizes/font_size = 20
 text = "<5"
 horizontal_alignment = 1
 vertical_alignment = 1
