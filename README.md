@@ -2,8 +2,6 @@
 
 > A logic puzzle game built with Godot 4.5 where you place dominoes on a procedurally generated grid to satisfy mathematical constraints.
 
-🎮 **[Play Online on itch.io →](https://javen-w.itch.io/ritz)**
-
 ---
 
 ## Table of Contents
@@ -24,7 +22,7 @@
 
 Ritz runs entirely in the browser — no download or installation required.
 
-**[▶ Play on itch.io](https://javen-w.itch.io/ritz)**
+🎮 **[Play Online on itch.io →](https://javenw.itch.io/ritz)**
 
 > **Browser requirements:** A modern browser with WebGL 2.0 and WebAssembly support (Chrome, Firefox, Edge, or Safari 16+).
 > Click anywhere on the game canvas first to ensure keyboard input is captured.
@@ -131,57 +129,9 @@ Progress is automatically saved after every domino placement and reset. When you
 
 Classical piano pieces from J.S. Bach's *The Well-Tempered Clavier* play continuously as background music. Tracks are drawn from a shuffled, endless queue (no immediate repeats). A brief "Now Playing" notification fades in at the top of the screen when each new track begins.
 
-### Animated Generation
-
-By default, generation happens incrementally — tiles and constraints appear one by one with per-frame delays, giving a satisfying build-up animation. When resuming a saved session, generation is performed instantly.
-
----
-
 ## Technical Overview
 
 Ritz is built with **Godot 4.5** (GDScript, GL Compatibility renderer).
-
-### Architecture
-
-| File | Role |
-|------|------|
-| `game.gd` | Main game controller — tile/domino/constraint generation, win validation, camera, save/load |
-| `game_config.gd` | Plain data object holding all generation parameters |
-| `game_signalbus.gd` | Autoload event hub — all inter-system communication goes through signals here |
-| `tile.gd` | Static grid cell; holds a `dots_value` (−1 when empty) |
-| `domino.gd` | Draggable piece; handles picking, dragging, double-click rotation, and snap-to-tile logic |
-| `constraint.gd` | Constraint node — stores a tile group and validates its rule |
-| `domino_panel.gd` | Side panel UI that holds the player's domino stack |
-| `gen_panel.gd` | Generation parameter panel, built entirely in code via Godot's Control API |
-| `game_hud.gd` | In-game HUD — timer, reset button, win overlay |
-| `save_manager.gd` | Autoload that reads/writes `user://save_state.json` and `user://options.json` |
-| `music_manager.gd` | Autoload that manages background music playback and volume |
-| `main_menu.gd` | Main menu scene |
-| `options_menu.gd` | Options menu scene |
-
-### Signal Flow
-
-```
-Game ──generates──▶ Domino ──domino_generated──▶ GameSignalbus ──▶ DominoPanel
-                                                                  
-Player drags domino  ──drop──▶ Domino ──domino_assigned──▶ GameSignalbus ──▶ Game
-                                                                             │
-                                                                    validate_win_conditions()
-                                                                             │
-                                                                    ──game_won──▶ GameHUD
-```
-
-### Coordinate System
-
-- Grid positions: `Vector2i(col, row)`
-- Screen positions: grid position × 64 px (each tile is 64×64 px)
-- Domino snapping uses a 96 px search radius with an orientation penalty to prefer axis-aligned candidates
-
-### Shader Rendering
-
-Domino pip patterns are rendered entirely on the GPU via `domino.gdshader`. The shader receives `dots1_value` and `dots2_value` integer parameters and draws the corresponding pip layout without any sprite atlas.
-
----
 
 ## Setup & Build
 
@@ -204,47 +154,6 @@ No additional dependencies, plugins, or package managers are required.
 2. Open the Godot Editor and import the project by selecting the `project.godot` file.
 
 3. Press **F5** (or click the **Play** button ▶) to run the game from the editor.
-
-### Exporting for Web (itch.io)
-
-The repository includes a pre-configured Web export preset in `export_presets.cfg`.
-
-1. Install the Godot Web export templates via **Editor → Manage Export Templates**.
-
-2. Open **Project → Export…** — the **Web** preset will already be listed.
-
-3. Click **Export Project** (or **Export All**). The output is written to `builds/web/`.
-
-4. Zip the contents of `builds/web/` (all files, with `index.html` at the root):
-   ```bash
-   cd builds/web && zip -r ../../ritz-web.zip .
-   ```
-
-5. Upload `ritz-web.zip` to your itch.io project page, set **Kind of project** to **HTML**, and enable the **Embed in page** option.
-
-> **Note:** `builds/` is excluded from version control (`.gitignore`). Export templates must be installed locally; they are not bundled with the project.
-
-### Exporting for Desktop
-
-1. In the Godot Editor, open **Project → Export…**
-2. Add an export preset for your target platform (Windows, Linux, macOS).
-3. Configure the export path and click **Export Project**.
-
-> **Note:** The first export for a platform requires the matching Godot export templates. These can be downloaded inside the editor via **Editor → Manage Export Templates**.
-
-### Default Game Settings
-
-| Parameter | Default |
-|-----------|---------|
-| Grid size | 30 × 30 tiles |
-| Domino count | 10 |
-| Seed | 777 |
-| Noise type | Simplex Smooth |
-| Viewport | 1280 × 720 |
-
-All parameters can be changed at runtime via the **Generation Panel** on the right side of the screen.
-
----
 
 ## Project Structure
 

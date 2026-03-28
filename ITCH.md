@@ -1,7 +1,5 @@
 # Ritz — itch.io Publication Info
 
-Copy and paste each section into the corresponding field on the itch.io project page.
-
 ---
 
 ## 1. Short Description (Tagline)
