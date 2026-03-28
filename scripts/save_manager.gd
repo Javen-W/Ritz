@@ -178,13 +178,15 @@ func load_options() -> Dictionary:
 
 ## Apply saved display / render settings early (called from _ready).
 ## Audio settings are applied by MusicManager which runs immediately after.
-## Skipped when running in the Godot editor's embedded player (window APIs unsupported).
+## Skipped when running in the Godot editor's embedded player or in a web build
+## (window management APIs are unavailable in both environments).
 func _apply_saved_display_settings() -> void:
 	var opts := load_options()
 	if opts.is_empty():
 		return
-	# Window management APIs are not supported in the editor's embedded player.
-	if not OS.has_feature("editor"):
+	# Window management APIs are not supported in the editor's embedded player
+	# or in web/HTML5 builds (the browser owns the window).
+	if not OS.has_feature("editor") and not OS.has_feature("web"):
 		# Fullscreen
 		if bool(opts.get("fullscreen", false)):
 			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)

@@ -55,13 +55,13 @@ Constraints are generated from the actual tile values, so **every puzzle is alwa
 
 ### Features
 
-- 🎲 **Fully procedural** — tile layout, pip values, domino pairings, and constraints are all generated from a seed, giving you a unique puzzle every time.
-- 🧩 **Five constraint types** — SUM, EQUAL, NOT EQUAL, LESS THAN, and GREATER THAN keep every board feeling different.
-- 💾 **Auto-save & resume** — progress is saved automatically after every placement. Pick up exactly where you left off, including your elapsed time.
-- ⚙️ **Generation panel** — tweak the seed, grid size, domino count, noise parameters, and constraint probabilities at runtime to craft your own challenge.
-- 🎵 **Classical background music** — a shuffled, endless queue of Bach's *Well-Tempered Clavier* (performed by Kimiko Ishizaka) plays as you solve puzzles. A "Now Playing" notification fades in at the top of the screen when each new piece begins.
-- 🎬 **Animated board generation** — watch the board build itself tile by tile when a new game starts.
-- 🖥️ **Resolution & display options** — choose from preset resolutions (1280×720 to 2560×1440), toggle fullscreen, and control V-Sync and music volume.
+- **Fully procedural** — tile layout, pip values, domino pairings, and constraints are all generated from a seed, giving you a unique puzzle every time.
+- **Five constraint types** — SUM, EQUAL, NOT EQUAL, LESS THAN, and GREATER THAN keep every board feeling different.
+- **Auto-save & resume** — progress is saved automatically after every placement. Pick up exactly where you left off, including your elapsed time.
+- **Generation panel** — tweak the seed, grid size, domino count, noise parameters, and constraint probabilities at runtime to craft your own challenge.
+- **Classical background music** — a shuffled, endless queue of Bach's *Well-Tempered Clavier* (performed by Kimiko Ishizaka) plays as you solve puzzles. A "Now Playing" notification fades in at the top of the screen when each new piece begins.
+- **Animated board generation** — watch the board build itself tile by tile when a new game starts.
+- **Resolution & display options** — choose from preset resolutions (1280×720 to 2560×1440), toggle fullscreen, and control V-Sync and music volume.
 
 ---
 
@@ -76,3 +76,18 @@ Ritz was built with **Godot 4.5** (GDScript, GL Compatibility renderer). The pip
 ```
 puzzle, domino, logic-puzzle, procedural-generation, constraint-satisfaction, singleplayer, godot, relaxing, brain-teaser, math
 ```
+
+---
+
+## 4. itch.io Theme (Customize Game Page)
+
+Derived from the in-game UI palette (dark navy background, slate-blue panels, sky-blue accents, near-white text).
+
+| Field          | Value     | Notes                                              |
+|----------------|-----------|----------------------------------------------------|
+| **BG**         | `#0A0C16` | Deep navy — matches the main menu overlay          |
+| **BG 2**       | `#2D3347` | Slate blue — matches the button/panel background   |
+| **Text**       | `#F2F2FF` | Near-white with a cool blue tint — matches titles  |
+| **Link**       | `#8CC6FF` | Sky blue — matches the section-header accent color |
+| **Font**       | [Inter](https://fonts.google.com/specimen/Inter) | Clean, modern, highly legible body font |
+| **Header Font**| [Outfit](https://fonts.google.com/specimen/Outfit) | Geometric, slightly rounded — complements the puzzle-game aesthetic |

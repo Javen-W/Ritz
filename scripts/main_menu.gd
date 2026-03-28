@@ -308,7 +308,9 @@ func _build_ui_layer() -> void:
 
 	# Play button
 	var play_btn := Button.new()
-	play_btn.text = "▶  Play"
+	play_btn.text = "Play"
+	play_btn.icon = load("res://assets/icons/icon_play.svg")
+	# play_btn.add_theme_constant_override("icon_max_width", 22)
 	play_btn.focus_mode = Control.FOCUS_NONE
 	play_btn.custom_minimum_size = Vector2(240, 52)
 	play_btn.add_theme_font_size_override("font_size", 22)
@@ -320,7 +322,9 @@ func _build_ui_layer() -> void:
 
 	# Options button
 	var options_btn := Button.new()
-	options_btn.text = "⚙  Options"
+	options_btn.text = "Options"
+	options_btn.icon = load("res://assets/icons/icon_gear.svg")
+	# options_btn.add_theme_constant_override("icon_max_width", 18)
 	options_btn.focus_mode = Control.FOCUS_NONE
 	options_btn.custom_minimum_size = Vector2(240, 44)
 	options_btn.add_theme_font_size_override("font_size", 18)
@@ -328,17 +332,20 @@ func _build_ui_layer() -> void:
 	MusicManager.setup_button(options_btn)
 	vbox.add_child(options_btn)
 
-	# Exit button
-	var exit_btn := Button.new()
-	exit_btn.text = "✕  Exit"
-	exit_btn.focus_mode = Control.FOCUS_NONE
-	exit_btn.custom_minimum_size = Vector2(240, 44)
-	exit_btn.add_theme_font_size_override("font_size", 18)
-	exit_btn.pressed.connect(_on_exit_pressed)
-	MusicManager.setup_button(exit_btn,
-		Color(0.35, 0.12, 0.12, 0.90),
-		Color(0.55, 0.18, 0.18, 0.97))
-	vbox.add_child(exit_btn)
+	# Exit button — hidden on web (quitting a browser tab is not meaningful)
+	if not OS.has_feature("web"):
+		var exit_btn := Button.new()
+		exit_btn.text = "Exit"
+		exit_btn.icon = load("res://assets/icons/icon_close.svg")
+		# exit_btn.add_theme_constant_override("icon_max_width", 16)
+		exit_btn.focus_mode = Control.FOCUS_NONE
+		exit_btn.custom_minimum_size = Vector2(240, 44)
+		exit_btn.add_theme_font_size_override("font_size", 18)
+		exit_btn.pressed.connect(_on_exit_pressed)
+		MusicManager.setup_button(exit_btn,
+			Color(0.35, 0.12, 0.12, 0.90),
+			Color(0.55, 0.18, 0.18, 0.97))
+		vbox.add_child(exit_btn)
 
 	# Version + author label (bottom-right corner)
 	var version_lbl := Label.new()

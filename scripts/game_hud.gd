@@ -122,12 +122,24 @@ func _build_win_popup() -> void:
 	vbox.add_theme_constant_override("separation", 18)
 	margin.add_child(vbox)
 
+	# Title row: party icon + "Puzzle Complete!" label centred together
+	var title_row := HBoxContainer.new()
+	title_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	title_row.add_theme_constant_override("separation", 10)
+	vbox.add_child(title_row)
+	var title_icon := TextureRect.new()
+	title_icon.texture = load("res://assets/icons/icon_party.svg")
+	title_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	title_icon.custom_minimum_size = Vector2(36, 36)
+	title_icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	title_icon.size_flags_vertical   = Control.SIZE_SHRINK_CENTER
+	title_row.add_child(title_icon)
 	var title := Label.new()
-	title.text = "🎉  Puzzle Complete!"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.text = "Puzzle Complete!"
+	title.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	title.add_theme_font_size_override("font_size", 40)
 	title.add_theme_color_override("font_color", SUCCESS_COLOR)
-	vbox.add_child(title)
+	title_row.add_child(title)
 
 	_win_message_label = Label.new()
 	_win_message_label.text = "Completed in 00:00"

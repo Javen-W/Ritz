@@ -2,10 +2,13 @@
 
 > A logic puzzle game built with Godot 4.5 where you place dominoes on a procedurally generated grid to satisfy mathematical constraints.
 
+🎮 **[Play Online on itch.io →](https://javen-w.itch.io/ritz)**
+
 ---
 
 ## Table of Contents
 
+- [Play Online](#play-online)
 - [Game Description](#game-description)
 - [How to Play](#how-to-play)
 - [Features](#features)
@@ -14,6 +17,17 @@
 - [Project Structure](#project-structure)
 - [Credits](#credits)
 - [License](#license)
+
+---
+
+## Play Online
+
+Ritz runs entirely in the browser — no download or installation required.
+
+**[▶ Play on itch.io](https://javen-w.itch.io/ritz)**
+
+> **Browser requirements:** A modern browser with WebGL 2.0 and WebAssembly support (Chrome, Firefox, Edge, or Safari 16+).
+> Click anywhere on the game canvas first to ensure keyboard input is captured.
 
 ---
 
@@ -63,8 +77,7 @@ Your goal is to place every domino on the board so that every constraint is sati
 | Reset all dominos | Reset button (HUD) |
 | Return to main menu | Escape |
 
-<!-- TODO: Add an annotated screenshot or GIF showing domino placement here -->
-<!-- ![Placement Demo](docs/screenshots/placement-demo.gif) -->
+> **Web / browser note:** Click anywhere on the game canvas first to ensure keyboard controls (arrow keys, Space, Escape) are captured by the game rather than the browser.
 
 ---
 
@@ -192,10 +205,29 @@ No additional dependencies, plugins, or package managers are required.
 
 3. Press **F5** (or click the **Play** button ▶) to run the game from the editor.
 
-### Exporting a Build
+### Exporting for Web (itch.io)
+
+The repository includes a pre-configured Web export preset in `export_presets.cfg`.
+
+1. Install the Godot Web export templates via **Editor → Manage Export Templates**.
+
+2. Open **Project → Export…** — the **Web** preset will already be listed.
+
+3. Click **Export Project** (or **Export All**). The output is written to `builds/web/`.
+
+4. Zip the contents of `builds/web/` (all files, with `index.html` at the root):
+   ```bash
+   cd builds/web && zip -r ../../ritz-web.zip .
+   ```
+
+5. Upload `ritz-web.zip` to your itch.io project page, set **Kind of project** to **HTML**, and enable the **Embed in page** option.
+
+> **Note:** `builds/` is excluded from version control (`.gitignore`). Export templates must be installed locally; they are not bundled with the project.
+
+### Exporting for Desktop
 
 1. In the Godot Editor, open **Project → Export…**
-2. Add an export preset for your target platform (Windows, Linux, macOS, Web, etc.).
+2. Add an export preset for your target platform (Windows, Linux, macOS).
 3. Configure the export path and click **Export Project**.
 
 > **Note:** The first export for a platform requires the matching Godot export templates. These can be downloaded inside the editor via **Editor → Manage Export Templates**.
@@ -212,9 +244,6 @@ No additional dependencies, plugins, or package managers are required.
 
 All parameters can be changed at runtime via the **Generation Panel** on the right side of the screen.
 
-<!-- TODO: Add a screenshot of the export settings here -->
-<!-- ![Export Settings](docs/screenshots/export-settings.png) -->
-
 ---
 
 ## Project Structure
@@ -222,6 +251,7 @@ All parameters can be changed at runtime via the **Generation Panel** on the rig
 ```
 Ritz/
 ├── project.godot          # Godot project configuration
+├── export_presets.cfg     # Export presets (Web/HTML5 for itch.io)
 ├── game.tscn              # Main game scene
 ├── game.gd                # Game controller
 ├── game_config.gd         # Generation config data class
