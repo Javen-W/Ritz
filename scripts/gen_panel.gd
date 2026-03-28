@@ -13,6 +13,7 @@ const PANEL_WIDTH    := 340
 const LABEL_MIN_W    := 110
 const SECTION_COLOR  := Color(0.55, 0.78, 1.0, 1.0)
 const CONTROL_FONT_SIZE := 12
+const BUTTON_FONT_SIZE := 14
 
 # Core
 var _seed_spin        : SpinBox
@@ -113,10 +114,14 @@ func _build_ui() -> void:
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	outer.add_child(scroll)
 
+	var scroll_margin := MarginContainer.new()
+	scroll_margin.add_theme_constant_override("margin_left", 15)
+	scroll.add_child(scroll_margin)
+
 	var content := VBoxContainer.new()
 	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	content.add_theme_constant_override("separation", 5)
-	scroll.add_child(content)
+	scroll_margin.add_child(content)
 
 	# ── Core ──────────────────────────────────────────────────────────────────
 	content.add_child(_section_header("Core"))
@@ -134,10 +139,10 @@ func _build_ui() -> void:
 	content.add_child(_section_header("Sampling"))
 
 	_dot_algo_opt = _make_option([
-		["dot_sample_1 (random)",     GameConfig.DotSamplingAlgorithm.DOT_SAMPLE_1],
-		["dot_sample_2 (noise-map)",  GameConfig.DotSamplingAlgorithm.DOT_SAMPLE_2],
+		["sample_1 (random)",     GameConfig.DotSamplingAlgorithm.DOT_SAMPLE_1],
+		["sample_2 (noise-map)",  GameConfig.DotSamplingAlgorithm.DOT_SAMPLE_2],
 	])
-	content.add_child(_row("Dot Value Mode", _dot_algo_opt))
+	content.add_child(_row("Dot Value", _dot_algo_opt))
 
 	_path_branch_spin = _make_spinbox(0.0, 1.0, 0.05)
 	_path_branch_spin.custom_arrow_step = 0.1
@@ -223,10 +228,10 @@ func _build_ui() -> void:
 	var reset_defaults_btn := Button.new()
 	reset_defaults_btn.text = "Defaults"
 	reset_defaults_btn.icon = load("res://assets/icons/icon_reset.svg")
-	reset_defaults_btn.add_theme_constant_override("icon_max_width", 12)
+	# reset_defaults_btn.add_theme_constant_override("icon_max_width", 12)
 	reset_defaults_btn.focus_mode = Control.FOCUS_NONE
 	reset_defaults_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	reset_defaults_btn.add_theme_font_size_override("font_size", 11)
+	reset_defaults_btn.add_theme_font_size_override("font_size", BUTTON_FONT_SIZE)
 	reset_defaults_btn.pressed.connect(_on_reset_defaults_pressed)
 	MusicManager.setup_button(reset_defaults_btn)
 	util_row.add_child(reset_defaults_btn)
@@ -234,10 +239,10 @@ func _build_ui() -> void:
 	var copy_btn := Button.new()
 	copy_btn.text = "Copy"
 	copy_btn.icon = load("res://assets/icons/icon_copy.svg")
-	copy_btn.add_theme_constant_override("icon_max_width", 12)
+	# copy_btn.add_theme_constant_override("icon_max_width", 12)
 	copy_btn.focus_mode = Control.FOCUS_NONE
 	copy_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	copy_btn.add_theme_font_size_override("font_size", 11)
+	copy_btn.add_theme_font_size_override("font_size", BUTTON_FONT_SIZE)
 	copy_btn.pressed.connect(_on_copy_config_pressed)
 	MusicManager.setup_button(copy_btn)
 	util_row.add_child(copy_btn)
@@ -245,9 +250,9 @@ func _build_ui() -> void:
 	var gen_btn := Button.new()
 	gen_btn.text = "Generate"
 	gen_btn.icon = load("res://assets/icons/icon_dice.svg")
-	gen_btn.add_theme_constant_override("icon_max_width", 15)
+	# gen_btn.add_theme_constant_override("icon_max_width", 15)
 	gen_btn.focus_mode = Control.FOCUS_NONE
-	gen_btn.add_theme_font_size_override("font_size", 15)
+	gen_btn.add_theme_font_size_override("font_size", BUTTON_FONT_SIZE + 1)
 	gen_btn.custom_minimum_size = Vector2(0, 42)
 	gen_btn.pressed.connect(_on_generate_pressed)
 	MusicManager.setup_button(gen_btn,
@@ -257,13 +262,17 @@ func _build_ui() -> void:
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
-func _section_header(text: String) -> Label:
+func _section_header(text: String) -> MarginContainer:
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_top", 10)
+	
 	var lbl := Label.new()
-	lbl.text = "  " + text
-	lbl.add_theme_font_size_override("font_size", 12)
+	lbl.text = text
+	lbl.add_theme_font_size_override("font_size", 14)
 	lbl.add_theme_color_override("font_color", SECTION_COLOR)
-	lbl.add_theme_constant_override("margin_top", 6)
-	return lbl
+	
+	margin.add_child(lbl)
+	return margin
 
 func _make_spinbox(min_val: float, max_val: float, step: float) -> SpinBox:
 	var sb := SpinBox.new()

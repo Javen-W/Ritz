@@ -106,9 +106,9 @@ var sfx_volume_db: float = -14.0
 # Long titles auto-scroll horizontally.
 
 const NP_MAX_WIDTH:     float = 480.0   # maximum width of the notification panel
-const NP_FONT_SIZE:     int   = 14
-const NP_ICON_SIZE:     float = 14.0    # music-note icon size; matches NP_FONT_SIZE
-const NP_FADE_DURATION: float = 0.7     # seconds for each fade in/out
+const NP_FONT_SIZE:     int   = 14.0
+const NP_ICON_SIZE:     float = 12.0    # music-note icon size; matches NP_FONT_SIZE
+const NP_FADE_DURATION: float = 1.0     # seconds for each fade in/out
 const NP_HOLD_DURATION: float = 5.5     # seconds the notification stays fully visible
 const NP_SCROLL_SPEED:  float = 45.0    # pixels per second for long-title scrolling
 const NP_SCROLL_PAUSE:  float = 1.2     # pause at each end of the scroll cycle
@@ -330,6 +330,7 @@ func _setup_now_playing_ui() -> void:
 	_np_icon.texture = load("res://assets/icons/icon_music.svg")
 	_np_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_np_icon.custom_minimum_size = Vector2(NP_ICON_SIZE, NP_ICON_SIZE)
+	# _np_icon.size = Vector2(NP_ICON_SIZE, NP_ICON_SIZE) / 2.0
 	_np_icon.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_np_icon.size_flags_vertical   = Control.SIZE_SHRINK_CENTER
 	np_hbox.add_child(_np_icon)
