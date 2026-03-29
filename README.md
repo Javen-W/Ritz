@@ -35,8 +35,7 @@ Ritz is a single-player puzzle game centered around dominoes and constraint sati
 
 Your goal is to place every domino on the board so that every constraint is satisfied at the same time.
 
-<!-- TODO: Add a screenshot of the main game view here -->
-<!-- ![Game Screenshot](docs/screenshots/game-overview.png) -->
+![Game Screenshot](docs/screenshots/2026-03-28_11-34.png)
 
 ---
 
@@ -110,8 +109,7 @@ A built-in side panel exposes every generation parameter at runtime — no recom
 - Constraint group size distribution (mean, std, min, max)
 - Per-type constraint probabilities
 
-<!-- TODO: Add a screenshot of the generation panel here -->
-<!-- ![Generation Panel](docs/screenshots/gen-panel.png) -->
+![Generation Panel](docs/screenshots/2026-03-28_11-38_1.png)
 
 ### Save & Resume
 
