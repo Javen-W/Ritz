@@ -15,8 +15,8 @@ const VERSION: String = "v0.1.0"
 const AUTHOR: String  = "Javen W."
 
 # Background generation settings
-const BG_MAP_SIZE:     int   = 35
-const BG_NUM_DOMINOS:  int   = 250
+const BG_MAP_SIZE:     int   = 30
+const BG_NUM_DOMINOS:  int   = 350
 const BG_TILE_SIZE:    float = 64.0
 
 # Camera pan
